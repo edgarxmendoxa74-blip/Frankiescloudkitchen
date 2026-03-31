@@ -5,12 +5,12 @@ import { supabase } from '../supabaseClient';
 
 const Contact = () => {
     const [storeSettings, setStoreSettings] = useState({
-        store_name: 'Oesters',
-        address: 'Philippines',
+        store_name: "Frankie's Cloud Kitchen",
+        address: 'Calamba, Laguna',
         contact: '09563713967',
         open_time: '10:00',
-        close_time: '01:00',
-        logo_url: '/logo.png'
+        close_time: '22:00',
+        logo_url: '/frankies-logo.jpg'
     });
 
     useEffect(() => {
@@ -64,27 +64,22 @@ const Contact = () => {
                             <Clock size={28} />
                         </div>
                         <h3 style={{ marginBottom: '12px' }}>Hours</h3>
-                        <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', lineHeight: '1.6' }}>
-                            Open daily from:<br />
-                            {formatTime(storeSettings.open_time)} - {formatTime(storeSettings.close_time)}
+                        <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', lineHeight: '1.6', whiteSpace: 'pre-line' }}>
+                            {storeSettings.operating_hours || `Open daily from: \n ${formatTime(storeSettings.open_time)} - ${formatTime(storeSettings.close_time)}`}
                         </p>
                     </div>
                 </div>
-
-                {/* Social Media Section */}
-                <div style={{ background: 'var(--primary)', color: 'white', borderRadius: '30px', padding: '60px', textAlign: 'center' }}>
-                    <h2 style={{ fontSize: '2rem', marginBottom: '20px' }}>Stay Connected</h2>
-                    <p style={{ marginBottom: '40px', color: 'rgba(255,255,255,0.8)' }}>Follow us on social media for daily specials and events.</p>
-                    <div style={{ display: 'flex', justifyContent: 'center', gap: '20px' }}>
-                        <a href="https://www.facebook.com/oesterscafeandresto" target="_blank" rel="noopener noreferrer" style={{ background: 'white', color: 'var(--primary)', padding: '15px 30px', borderRadius: '50px', textDecoration: 'none', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '10px' }}>
-                            <Facebook size={20} />
-                            Facebook
-                        </a>
-                        <a href="mailto:contact@oesters.com" style={{ background: 'rgba(255,255,255,0.1)', color: 'white', border: '1px solid rgba(255,255,255,0.3)', padding: '15px 30px', borderRadius: '50px', textDecoration: 'none', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '10px' }}>
-                            <Mail size={20} />
-                            Email Us
-                        </a>
-                    </div>
+                
+                <div style={{ textAlign: 'center', marginTop: '60px' }}>
+                    <a 
+                        href="https://m.me/frankies.cloudkitchen" 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="btn-accent" 
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: '12px', padding: '20px 40px', borderRadius: '15px', textDecoration: 'none', fontWeight: 800, fontSize: '1.2rem', boxShadow: '0 10px 20px rgba(0,0,0,0.1)' }}
+                    >
+                        <Facebook size={26} /> Message us on Messenger
+                    </a>
                 </div>
             </main>
         </div>

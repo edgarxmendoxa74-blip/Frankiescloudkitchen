@@ -5,8 +5,8 @@ import { supabase } from '../supabaseClient';
 
 const About = () => {
     const [storeSettings, setStoreSettings] = useState({
-        store_name: 'Oesters',
-        logo_url: '/logo.png'
+        store_name: "Frankie's Cloud Kitchen",
+        logo_url: '/frankies-logo.jpg'
     });
 
     useEffect(() => {
@@ -23,15 +23,15 @@ const About = () => {
             <main className="container" style={{ padding: '80px 0' }}>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '60px', alignItems: 'center', marginBottom: '80px' }}>
                     <div>
-                        <h2 style={{ fontSize: '2.5rem', marginBottom: '30px', color: 'var(--primary)' }}>Where Seafood Meets Soul</h2>
+                        <h2 style={{ fontSize: '2.5rem', marginBottom: '30px', color: 'var(--primary)' }}>Real Flavors, Modern Convenience</h2>
                         <p style={{ marginBottom: '20px', lineHeight: '1.8' }}>
-                            {storeSettings.store_name} began with a simple idea: that high-quality seafood shouldn't be a luxury reserved only for the coast. Our founders, passionate foodies with a love for vibrant culture, set out to create a space where people could enjoy great food alongside artisanal coffee.
+                            {storeSettings.store_name} (formerly Frankie's at Cool Creams) is dedicated to bringing high-quality, delicious comfort food to the heart of Calamba. As a delivery-focused cloud kitchen, we prioritize speed, flavor, and the joy of a good meal shared at home.
                         </p>
                         <p style={{ lineHeight: '1.8' }}>
-                            Every oyster we serve is hand-selected and handled with the utmost care, ensuring that every bite is as fresh as the day it was harvested. Our coffee is equally curated, with beans sourced from local growers and expertly prepared by our baristas.
+                            From our signature crispy chicken fingers with BBQ sauce to our creamy, indulgent milkshakes and frappes, every item on our menu is crafted with care using fresh ingredients. We aim to be your go-to choice for satisfying meals and sweet treats.
                         </p>
                     </div>
-                    <img src="https://images.unsplash.com/photo-1551024601-bec78aea704b?auto=format&fit=crop&w=800&q=80" alt="Cafe Interior" style={{ width: '100%', borderRadius: '20px', boxShadow: 'var(--shadow-lg)' }} />
+                    <img src="https://images.unsplash.com/photo-1562967914-608f82629710?auto=format&fit=crop&w=800&q=80" alt="Delicious Chicken" style={{ width: '100%', borderRadius: '20px', boxShadow: 'var(--shadow-lg)' }} />
                 </div>
 
             </main>

@@ -8,15 +8,22 @@ const Header = () => {
     const { cartCount, setIsCartOpen, categories, activeCategory, setActiveCategory } = useCart();
     const [storeSettings, setStoreSettings] = useState({
         open_time: '10:00',
-        close_time: '01:00',
-        manual_status: 'auto'
+        close_time: '22:00',
+        manual_status: 'auto',
+        logo_url: '/frankies-logo.jpg',
+        store_name: "Frankie's Cloud Kitchen"
     });
     const location = useLocation();
 
     useEffect(() => {
         const fetchSettings = async () => {
             const { data } = await supabase.from('store_settings').select('*').limit(1).single();
-            if (data) setStoreSettings(data);
+            if (data) {
+                // Ensure correct brand name and logo fallback
+                const correctName = data.store_name && data.store_name.includes("Oester") ? "Frankie's Cloud Kitchen" : data.store_name;
+                const correctLogo = data.logo_url || '/frankies-logo.jpg';
+                setStoreSettings({ ...data, store_name: correctName || "Frankie's Cloud Kitchen", logo_url: correctLogo });
+            }
         };
         fetchSettings();
     }, []);
@@ -47,29 +54,45 @@ const Header = () => {
 
     return (
         <>
-            {!isOpen && (
-                <div style={{ background: '#ef4444', color: 'white', textAlign: 'center', padding: '10px', position: 'sticky', top: 0, zIndex: 1200, fontWeight: 700, fontSize: '0.85rem' }}>
-                    <Clock size={14} style={{ marginRight: '8px', verticalAlign: 'middle' }} />
-                    WE ARE CURRENTLY CLOSED. Orders are disabled.
-                </div>
-            )}
-            <header className="app-header" style={{ top: isOpen ? 0 : '35px', paddingBottom: '0' }}>
-                <div className="container header-container">
+            <header className="app-header" style={{
+                top: 0,
+                padding: '12px 0',
+                background: '#FFFFFF',
+                borderBottom: '1px solid var(--border)',
+                zIndex: 1100
+            }}>
+                <div className="container header-container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <Link to="/" className="brand" style={{ display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none' }}>
                         {storeSettings.logo_url ? (
-                            <img src={storeSettings.logo_url} alt={storeSettings.store_name || 'Oesters Logo'} style={{ height: '45px', width: 'auto', objectFit: 'contain' }} />
+                            <img src={storeSettings.logo_url} alt={storeSettings.store_name || "Frankie's Logo"} style={{ height: '40px', width: 'auto', objectFit: 'contain' }} />
                         ) : (
-                            <span style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--primary)', fontFamily: 'Playfair Display, serif' }}>
-                                {storeSettings.store_name || 'Oesters'}
+                            <span style={{ fontSize: '1.4rem', fontWeight: 700, color: 'var(--primary)', fontFamily: 'Lexend, sans-serif' }}>
+                                {storeSettings.store_name || "Frankie's Cloud Kitchen"}
                             </span>
                         )}
                     </Link>
 
                     {/* Navigation */}
-                    <nav style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-                        <Link to="/contact" className={`nav-link ${location.pathname === '/contact' ? 'active' : ''}`}>Contact</Link>
+                    <nav style={{ display: 'flex', alignItems: 'center', gap: '30px' }}>
+                        <Link to="/contact" className={`nav-link ${location.pathname === '/contact' ? 'active' : ''}`} style={{ fontWeight: 600, textDecoration: 'none', color: 'var(--text)', transition: '0.3s' }}>Contact</Link>
 
-                        <button className="btn-accent" onClick={() => setIsCartOpen(true)} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <button
+                            className="btn-accent"
+                            onClick={() => setIsCartOpen(true)}
+                            style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '8px',
+                                padding: '8px 16px',
+                                borderRadius: 'var(--radius)',
+                                boxShadow: 'none',
+                                border: '1px solid var(--accent)',
+                                background: 'transparent',
+                                color: 'var(--accent)',
+                                cursor: 'pointer',
+                                fontWeight: 700
+                            }}
+                        >
                             <ShoppingBag size={18} />
                             <span>Cart ({cartCount})</span>
                         </button>
@@ -79,9 +102,9 @@ const Header = () => {
 
                 {/* Categories Row (Merged in Header) */}
                 {location.pathname === '/' && categories.length > 0 && (
-                    <div className="category-nav-wrapper" style={{ borderTop: '1px solid var(--border)', background: '#fff' }}>
+                    <div className="category-nav-wrapper" style={{ borderTop: '1px solid rgba(0,0,0,0.05)', background: 'transparent', padding: '5px 0' }}>
                         <div className="container">
-                            <div className="category-slider" style={{ padding: '10px 0' }}>
+                            <div className="category-slider" style={{ padding: '8px 0' }}>
                                 {categories.map(cat => (
                                     <div
                                         key={cat.id}
@@ -89,6 +112,15 @@ const Header = () => {
                                         onClick={() => {
                                             setActiveCategory(cat.id);
                                             document.getElementById('menu')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                                        }}
+                                        style={{
+                                            border: '1px solid var(--border)',
+                                            background: activeCategory === cat.id ? 'var(--primary)' : 'white',
+                                            color: activeCategory === cat.id ? '#fff' : 'var(--text)',
+                                            padding: '6px 16px',
+                                            borderRadius: 'var(--radius)',
+                                            fontWeight: 600,
+                                            fontSize: '0.8rem'
                                         }}
                                     >
                                         {cat.name}
@@ -102,34 +134,37 @@ const Header = () => {
             </header>
 
             <style>{`
-                .nav-link.active { color: var(--primary); border-bottom: 2px solid var(--primary); }
+                .nav-link { position: relative; font-size: 0.95rem; }
+                .nav-link::after { content: ''; position: absolute; width: 0; height: 2px; bottom: -5px; left: 0; background-color: var(--primary); transition: width 0.3s; }
+                .nav-link:hover::after { width: 100%; }
+                .nav-link.active { color: var(--primary) !important; }
+                .nav-link.active::after { width: 100%; }
                 
                 .category-slider {
                     display: flex;
-                    gap: 10px;
+                    gap: 12px;
                     overflow-x: auto;
                     scroll-behavior: smooth;
                     scrollbar-width: none;
                     -ms-overflow-style: none;
+                    padding: 5px 0;
                 }
                 .category-slider::-webkit-scrollbar {
                     display: none;
                 }
                 .category-item {
                     flex: 0 0 auto;
-                    padding: 6px 15px;
-                    border-radius: 20px;
-                    font-size: 0.8rem;
-                    font-weight: 600;
                     cursor: pointer;
                     white-space: nowrap;
-                    transition: all 0.3s;
-                    border: 1px solid var(--border);
+                    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                    box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+                }
+                .category-item:hover {
+                    background: rgba(255, 0, 144, 0.05) !important;
+                    transform: translateY(-1px);
                 }
                 .category-item.active {
-                    background: var(--primary);
-                    color: white;
-                    border-color: var(--primary);
+                    box-shadow: 0 4px 15px rgba(255, 0, 144, 0.25);
                 }
             `}</style>
         </>

@@ -7,7 +7,7 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 -- 1. Store Settings Table
 CREATE TABLE IF NOT EXISTS store_settings (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    store_name TEXT NOT NULL DEFAULT 'Oesters Cafe and Resto',
+    store_name TEXT NOT NULL DEFAULT 'Frankie''s Cloud Kitchen',
     address TEXT,
     contact TEXT,
     logo_url TEXT,

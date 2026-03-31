@@ -20,7 +20,8 @@ import {
     ChevronLeft,
     ChevronRight,
     Truck,
-    Utensils
+    Utensils,
+    Eye
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { categories as initialCategories, menuItems } from '../data/MenuData';
@@ -53,17 +54,23 @@ const Home = () => {
     const [storeSettings, setStoreSettings] = useState({
         manual_status: 'auto',
         open_time: '10:00',
-        close_time: '01:00',
-        store_name: '',
-        address: 'Poblacion, El Nido, Palawan',
+        close_time: '22:00',
+        store_name: "Frankie's Cloud Kitchen",
+        address: 'Calamba, Laguna',
         contact: '09563713967',
-        banner_images: []
+        logo_url: '/frankies-logo.jpg',
+        banner_images: [
+            'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1200&q=80',
+            'https://images.unsplash.com/photo-1493770348161-369560ae357d?auto=format&fit=crop&w=1200&q=80',
+            'https://images.unsplash.com/photo-1473093226795-af9932fe5856?auto=format&fit=crop&w=1200&q=80'
+        ]
     });
 
     const [currentBannerIndex, setCurrentBannerIndex] = useState(0);
     const [menuLoading, setMenuLoading] = useState(false); // Start false to show default/cached items instantly
     const [isRefreshing, setIsRefreshing] = useState(false);
     const [isPlacingOrder, setIsPlacingOrder] = useState(false);
+    const [previewImage, setPreviewImage] = useState(null);
 
     const isStoreOpen = () => {
         if (storeSettings.manual_status === 'open') return true;
@@ -91,13 +98,22 @@ const Home = () => {
     const sanitizeItems = (items) => {
         if (!Array.isArray(items)) return items;
         return items.map(item => {
-            const isBase64 = typeof item.image === 'string' && item.image.startsWith('data:');
-            // If it's a huge base64 string, don't cache it locally.
-            if (isBase64 && item.image.length > 2000) {
+            const isBase64 = typeof item.image === 'string' && (item.image.startsWith('data:') || item.image.length > 5000);
+            // If it's a huge string, don't cache it locally.
+            if (isBase64 && item.image.length > 1000) {
                 return { ...item, image: null };
             }
             return item;
         });
+    };
+
+    const sanitizeStore = (store) => {
+        if (!store) return store;
+        const newBanners = (store.banner_images || []).filter(img => {
+            // Drop base64 banners from local cache
+            return typeof img === 'string' && !img.startsWith('data:');
+        });
+        return { ...store, banner_images: newBanners };
     };
 
     const safeSetItem = (key, value) => {
@@ -105,6 +121,12 @@ const Home = () => {
             localStorage.setItem(key, JSON.stringify(value));
         } catch (e) {
             console.warn(`Error writing ${key} to localStorage`, e);
+            if (e.name === 'QuotaExceededError') {
+                console.log('Clearing local cache due to space quota...');
+                localStorage.removeItem('menuItems');
+                localStorage.removeItem('categories');
+                localStorage.removeItem('banner_images');
+            }
         }
     };
 
@@ -191,21 +213,17 @@ const Home = () => {
                     safeSetItem('categories', filteredRemote);
                 }
 
-                let finalItems = [...(menuItems || [])];
-                if (itemData && Array.isArray(itemData)) {
-                    // Update existing or add new from DB
-                    itemData.forEach(remoteItem => {
-                        if (!remoteItem || !remoteItem.id) return;
-                        const idx = finalItems.findIndex(i => i && i.id === remoteItem.id);
-                        if (idx >= 0) finalItems[idx] = remoteItem;
-                        else finalItems.push(remoteItem);
-                    });
+                let finalItems = [];
+                if (itemData && Array.isArray(itemData) && itemData.length > 0) {
+                    finalItems = itemData.filter(i => i && i.id);
+                } else {
+                    // Fallback to hardcoded defaults only if DB is empty
+                    finalItems = [...(menuItems || [])].filter(i => i && i.id);
                 }
-                const validFinalItems = finalItems.filter(i => i && i.id);
-                setItems(validFinalItems);
+                setItems(finalItems);
 
                 // SANITIZE before saving to localStorage to prevent quota errors
-                const sanitizedForCache = sanitizeItems(validFinalItems);
+                const sanitizedForCache = sanitizeItems(finalItems);
                 safeSetItem('menuItems', sanitizedForCache);
 
 
@@ -232,7 +250,7 @@ const Home = () => {
 
                 if (storeData) {
                     setStoreSettings(prev => ({ ...prev, ...storeData }));
-                    safeSetItem('storeSettings', storeData);
+                    safeSetItem('storeSettings', sanitizeStore(storeData));
                 }
             } catch (error) {
                 console.error('Error fetching fresh data:', error);
@@ -348,9 +366,8 @@ const Home = () => {
             <section className="hero-section" style={{ overflow: 'hidden' }}>
                 <div className="container hero-split">
                     <div className="hero-content animate-fade-up">
-                        <h1>Quality in <span style={{ color: 'var(--accent)' }}>every bite</span></h1>
-                        <p>Experience our specialty dishes and coffee. We bring you the best flavors and a welcoming atmosphere.</p>
-                        {/* Explore Menu button removed */}
+                        <h1>Flavor in <span style={{ color: 'var(--accent)' }}>every bite</span></h1>
+                        <p>Experience Frankie's signature dishes, from crispy chicken to creamy milkshakes. We bring the cloud kitchen experience straight to your door!</p>
                     </div>
                     <div className="hero-image-container">
                         {(storeSettings.banner_images || []).map((url, i) => (
@@ -377,19 +394,18 @@ const Home = () => {
 
 
             <main className="container" id="menu" style={{ padding: '40px 0' }}>
-                <div style={{ textAlign: 'center', marginBottom: '30px' }}>
-                    <h2 style={{ fontSize: '2.2rem', marginBottom: '5px', color: 'var(--primary)' }}>Our Menu</h2>
-                    <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Pick your favorites and add them to your cart.</p>
-                </div>
 
 
                 <div className="menu-grid">
                     {filteredItems.map(item => (
                         <div className="menu-item-card" key={item.id} style={{ opacity: item.out_of_stock ? 0.6 : 1 }}>
-                            <div style={{ position: 'relative' }}>
+                        <div className="menu-item-image-wrapper" style={{ position: 'relative', overflow: 'hidden', cursor: 'pointer' }} onClick={() => setPreviewImage(item.image)}>
                                 <img src={item.image} alt={item.name} className="menu-item-image" loading="lazy" />
-                                {item.promo_price && <span style={{ position: 'absolute', top: '10px', left: '10px', background: '#ef4444', color: 'white', padding: '4px 10px', borderRadius: '20px', fontSize: '0.7rem', fontWeight: 800 }}>PROMO</span>}
-                                {item.out_of_stock && <span style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.4)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, borderRadius: '20px' }}>OUT OF STOCK</span>}
+                                <div className="image-overlay" style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.2)', opacity: 0, transition: 'opacity 0.3s', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>
+                                    <Eye size={32} />
+                                </div>
+                                {item.promo_price && <span style={{ position: 'absolute', top: '10px', left: '10px', background: '#ef4444', color: 'white', padding: '4px 10px', borderRadius: '20px', fontSize: '0.7rem', fontWeight: 800, zIndex: 5 }}>PROMO</span>}
+                                {item.out_of_stock && <span style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.4)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, borderRadius: '20px', zIndex: 6 }}>OUT OF STOCK</span>}
                             </div>
                             <div className="menu-item-info">
                                 <h3 className="menu-item-name">{item.name}</h3>
@@ -632,6 +648,26 @@ const Home = () => {
                     </div>
                 )
             }
+            {/* Image Preview Modal */}
+            {previewImage && (
+                <div 
+                    style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 5000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', cursor: 'zoom-out' }}
+                    onClick={() => setPreviewImage(null)}
+                >
+                    <button 
+                        onClick={() => setPreviewImage(null)}
+                        style={{ position: 'absolute', top: '20px', right: '20px', background: 'white', border: 'none', borderRadius: '50%', padding: '10px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 10px rgba(0,0,0,0.3)', zIndex: 5001 }}
+                    >
+                        <X size={24} color="var(--text)" />
+                    </button>
+                    <img 
+                        src={previewImage} 
+                        style={{ maxWidth: '100%', maxHeight: '100%', borderRadius: '12px', boxShadow: '0 20px 50px rgba(0,0,0,0.5)', objectFit: 'contain', transition: 'transform 0.3s' }} 
+                        alt="Preview" 
+                        onClick={(e) => e.stopPropagation()}
+                    />
+                </div>
+            )}
         </div>
     );
 };

@@ -77,16 +77,16 @@ const AdminDashboard = () => {
     const [storeSettings, setStoreSettings] = useState(() => safeGetItem('storeSettings', {
         manual_status: 'auto', // auto, open, closed
         open_time: '10:00',
-        close_time: '01:00',
-        store_name: '',
-        address: 'Poblacion, El Nido, Palawan',
+        close_time: '22:00',
+        store_name: "Frankie's Cloud Kitchen",
+        address: 'Calamba, Laguna',
         contact: '09563713967',
         banner_images: [
-            'https://images.unsplash.com/photo-1517701604599-bb29b565094d?auto=format&fit=crop&w=1200&q=80',
-            'https://images.unsplash.com/photo-1541167760496-162955ed8a9f?auto=format&fit=crop&w=1200&q=80',
-            'https://images.unsplash.com/photo-1559339352-11d035aa65de?auto=format&fit=crop&w=1200&q=80'
+            'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1200&q=80',
+            'https://images.unsplash.com/photo-1493770348161-369560ae357d?auto=format&fit=crop&w=1200&q=80',
+            'https://images.unsplash.com/photo-1473093226795-af9932fe5856?auto=format&fit=crop&w=1200&q=80'
         ],
-        logo_url: ''
+        logo_url: '/frankies-logo.jpg'
     }));
 
     // --- SYNC TO LOCAL STORAGE ---
@@ -155,7 +155,7 @@ const AdminDashboard = () => {
             <aside style={{ width: '260px', background: 'var(--primary)', color: 'white', padding: '30px 20px', position: 'fixed', height: '100vh' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '50px', paddingLeft: '10px' }}>
                     <Package size={28} color="var(--accent)" />
-                    <span style={{ fontSize: '1.4rem', fontWeight: 700, fontFamily: 'Playfair Display' }}>Oesters</span>
+                    <span style={{ fontSize: '1.2rem', fontWeight: 700, fontFamily: 'Lexend, sans-serif' }}>Frankie's Admin</span>
                 </div>
 
                 <nav style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>

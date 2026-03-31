@@ -16,14 +16,14 @@ const StoreGeneralSettings = ({ storeSettings, setStoreSettings, showMessage }) 
     };
 
     const handleResetToDefaults = async () => {
-        if (!window.confirm('This will overwrite current store settings with Oesters Cafe defaults. Continue?')) return;
+        if (!window.confirm("This will overwrite current store settings with Frankie's Kitchen defaults. Continue?")) return;
 
         const defaults = {
-            store_name: 'Oesters Cafe and Resto',
-            address: 'Poblacion, El Nido, Palawan',
+            store_name: "Frankie's Cloud Kitchen",
+            address: 'Calamba, Laguna',
             contact: '09563713967',
-            open_time: '16:00',
-            close_time: '01:00',
+            open_time: '10:00',
+            close_time: '22:00',
             manual_status: 'auto',
             banner_images: [],
             logo_url: ''
@@ -41,19 +41,20 @@ const StoreGeneralSettings = ({ storeSettings, setStoreSettings, showMessage }) 
             return;
         }
         setStoreSettings(data);
-        showMessage('Settings reset to Oesters defaults!');
+        showMessage("Settings reset to Frankie's defaults!");
     };
 
     const handleSave = async (e) => {
         e.preventDefault();
         const formData = new FormData(e.target);
         const updateData = {
-            store_name: formData.get('storeName'),
+            store_name: formData.get('storeName') || storeSettings.store_name || "Frankie's Cloud Kitchen",
             address: formData.get('address'),
             contact: formData.get('contact'),
-            open_time: formData.get('openTime'),
-            close_time: formData.get('closeTime'),
-            manual_status: formData.get('manualStatus'),
+            operating_hours: formData.get('operatingHours'),
+            open_time: storeSettings.open_time,
+            close_time: storeSettings.close_time,
+            manual_status: storeSettings.manual_status,
             logo_url: storeSettings.logo_url
         };
 
@@ -178,73 +179,24 @@ const StoreGeneralSettings = ({ storeSettings, setStoreSettings, showMessage }) 
                     onMouseOver={(e) => e.currentTarget.style.background = '#e2e8f0'}
                     onMouseOut={(e) => e.currentTarget.style.background = '#f1f5f9'}
                 >
-                    Reset to Oesters Defaults
+                    Reset to Frankie's Defaults
                 </button>
             </div>
 
             <form onSubmit={handleSave}>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '30px' }}>
-                    <div>
-                        <h3 style={{ fontSize: '1.1rem', marginBottom: '20px', color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                            <Clock size={20} /> Store Availability
-                        </h3>
-                        <div style={{ display: 'grid', gap: '15px' }}>
-                            <div>
-                                <label style={{ display: 'block', fontSize: '0.9rem', marginBottom: '8px', fontWeight: 600 }}>Manual Status Toggle</label>
-                                <select name="manualStatus" defaultValue={storeSettings.manual_status} style={inputStyle}>
-                                    <option value="auto">Auto (Based on Hours)</option>
-                                    <option value="open">Always Open</option>
-                                    <option value="closed">Always Closed</option>
-                                </select>
-                            </div>
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
-                                <div>
-                                    <label style={{ display: 'block', fontSize: '0.9rem', marginBottom: '8px', fontWeight: 600 }}>Opening Time</label>
-                                    <input name="openTime" type="time" defaultValue={storeSettings.open_time} style={inputStyle} />
-                                </div>
-                                <div>
-                                    <label style={{ display: 'block', fontSize: '0.9rem', marginBottom: '8px', fontWeight: 600 }}>Closing Time</label>
-                                    <input name="closeTime" type="time" defaultValue={storeSettings.close_time} style={inputStyle} />
-                                </div>
-                            </div>
-                        </div>
-                    </div>
 
                     <div>
                         <h3 style={{ fontSize: '1.1rem', marginBottom: '20px', color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: '10px' }}>
                             <FileText size={20} /> Store Information
                         </h3>
                         <div style={{ display: 'grid', gap: '15px' }}>
-                            <div><label style={{ display: 'block', fontSize: '0.9rem', marginBottom: '8px', fontWeight: 600 }}>Store Name</label><input name="storeName" defaultValue={storeSettings.store_name} style={inputStyle} /></div>
                             <div><label style={{ display: 'block', fontSize: '0.9rem', marginBottom: '8px', fontWeight: 600 }}>Address</label><input name="address" defaultValue={storeSettings.address} style={inputStyle} /></div>
-                            <div><label style={{ display: 'block', fontSize: '0.9rem', marginBottom: '8px', fontWeight: 600 }}>Contact Number</label><input name="contact" defaultValue={storeSettings.contact} style={inputStyle} /></div>
-                            <div style={{ marginTop: '10px' }}>
-                                <label style={{ display: 'block', fontSize: '0.9rem', marginBottom: '8px', fontWeight: 600 }}>Store Logo</label>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                                    {storeSettings.logo_url ? (
-                                        <div style={{ position: 'relative', width: '80px', height: '80px' }}>
-                                            <img src={storeSettings.logo_url} style={{ width: '80px', height: '80px', borderRadius: '12px', objectFit: 'contain', background: '#f8fafc', border: '1px solid #e2e8f0' }} alt="Logo" />
-                                            <button
-                                                type="button"
-                                                onClick={() => handleLogoUpload({ target: { files: [] } })}
-                                                style={{ position: 'absolute', top: '-8px', right: '-8px', background: '#ef4444', color: 'white', border: 'none', borderRadius: '50%', width: '24px', height: '24px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }}
-                                            >
-                                                <X size={14} />
-                                            </button>
-                                        </div>
-                                    ) : (
-                                        <label style={{ width: '80px', height: '80px', border: '2px dashed #e2e8f0', borderRadius: '12px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#64748b', transition: 'all 0.2s' }} onMouseOver={(e) => e.currentTarget.style.borderColor = 'var(--primary)'} onMouseOut={(e) => e.currentTarget.style.borderColor = '#e2e8f0'}>
-                                            <Plus size={24} />
-                                            <span style={{ fontSize: '0.65rem', fontWeight: 600 }}>Upload</span>
-                                            <input type="file" accept="image/*" onChange={handleLogoUpload} style={{ display: 'none' }} />
-                                        </label>
-                                    )}
-                                    <div style={{ fontSize: '0.8rem', color: '#64748b' }}>
-                                        <div style={{ fontWeight: 600, color: '#334155' }}>Logo Image</div>
-                                        <div>Recommended: Square PNG</div>
-                                    </div>
-                                </div>
-                            </div>
+                             <div><label style={{ display: 'block', fontSize: '0.9rem', marginBottom: '8px', fontWeight: 600 }}>Contact Number</label><input name="contact" defaultValue={storeSettings.contact} style={inputStyle} /></div>
+                             <div>
+                                <label style={{ display: 'block', fontSize: '0.9rem', marginBottom: '8px', fontWeight: 600 }}>Operating Hours</label>
+                                <input name="operatingHours" defaultValue={storeSettings.operating_hours || "Open daily from:\n5:00 AM - 12:00 AM"} style={inputStyle} placeholder="e.g. Open daily from: 5:00 AM - 12:00 AM" />
+                             </div>
                         </div>
                     </div>
 

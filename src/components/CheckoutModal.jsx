@@ -113,7 +113,7 @@ TOTAL AMOUNT: ₱${cartTotal}
 
 Thank you!`.trim();
 
-            const messengerUrl = `https://m.me/oesterscafeandresto?text=${encodeURIComponent(message)}`;
+            const messengerUrl = `https://m.me/frankies.cloudkitchen?text=${encodeURIComponent(message)}`;
             window.open(messengerUrl, '_blank');
 
             clearCart();
@@ -132,7 +132,7 @@ Thank you!`.trim();
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 4000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', backdropFilter: 'blur(5px)' }}>
             <div style={{ background: 'white', maxWidth: '500px', width: '100%', borderRadius: '24px', padding: '30px', position: 'relative', maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 20px 50px rgba(0,0,0,0.2)' }}>
                 <button onClick={() => setIsCheckoutOpen(false)} style={{ position: 'absolute', top: '20px', right: '20px', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}><X size={24} /></button>
-                <h2 style={{ marginBottom: '30px', fontSize: '1.8rem', color: 'var(--primary)', fontFamily: 'Playfair Display' }}>Complete Your Order</h2>
+                <h2 style={{ marginBottom: '30px', fontSize: '1.8rem', color: 'var(--primary)', fontFamily: 'Lexend, sans-serif' }}>Complete Your Order</h2>
 
                 <div style={{ marginBottom: '30px' }}>
                     <label style={{ fontWeight: 700, fontSize: '1rem', display: 'block', marginBottom: '15px' }}>Payment Method</label>

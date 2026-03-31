@@ -14,7 +14,7 @@ export const CartProvider = ({ children }) => {
 
     // Load cart from local storage on mount
     useEffect(() => {
-        const savedCart = localStorage.getItem('oesters_cart');
+        const savedCart = localStorage.getItem('frankies_cart');
         if (savedCart) {
             try {
                 setCart(JSON.parse(savedCart));
@@ -36,7 +36,7 @@ export const CartProvider = ({ children }) => {
 
     // Save cart to local storage whenever it changes
     useEffect(() => {
-        localStorage.setItem('oesters_cart', JSON.stringify(cart));
+        localStorage.setItem('frankies_cart', JSON.stringify(cart));
     }, [cart]);
 
     const addToCart = (item, options) => {

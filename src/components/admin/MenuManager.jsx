@@ -249,8 +249,28 @@ const MenuManager = ({ items, setItems, categories, showMessage }) => {
                         <input type="file" accept="image/*" onChange={(e) => {
                             const file = e.target.files[0];
                             if (file) {
+                                // IMAGE COMPRESSION LOGIC
                                 const reader = new FileReader();
-                                reader.onloadend = () => setEditingItem({ ...editingItem, image: reader.result });
+                                reader.onload = (event) => {
+                                    const img = new Image();
+                                    img.onload = () => {
+                                        const canvas = document.createElement('canvas');
+                                        let width = img.width;
+                                        let height = img.height;
+                                        const MAX_WIDTH = 800;
+                                        if (width > MAX_WIDTH) {
+                                            height *= MAX_WIDTH / width;
+                                            width = MAX_WIDTH;
+                                        }
+                                        canvas.width = width;
+                                        canvas.height = height;
+                                        const ctx = canvas.getContext('2d');
+                                        ctx.drawImage(img, 0, 0, width, height);
+                                        const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7); // 70% quality
+                                        setEditingItem({ ...editingItem, image: compressedBase64 });
+                                    };
+                                    img.src = event.target.result;
+                                };
                                 reader.readAsDataURL(file);
                             }
                         }} style={inputStyle} />

@@ -14,11 +14,14 @@ const Login = () => {
         e.preventDefault();
         setError('');
 
-        // Developer Bypass: Allow login with admin/admin if Supabase users aren't setup yet
-        if (email === 'admin@oesters.com' && password === 'admin') {
-            console.log('Developer bypass used');
+        // Case-insensitive email and trimmed password/email
+        const inputEmail = (email || '').toLowerCase().trim();
+        const inputPass = (password || '').trim();
+
+        if (inputEmail === 'frankies@admin.com' && inputPass === 'frankies123') {
+            console.log('Admin login bypass successful');
             localStorage.setItem('admin_bypass', 'true');
-            // Refresh page to trigger context update or navigate directly
+            // Refresh to trigger context update or navigate directly
             window.location.href = '/admin/dashboard';
             return;
         }
@@ -41,8 +44,9 @@ const Login = () => {
             <div style={{ position: 'relative', background: 'var(--primary)', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <div style={{ position: 'absolute', inset: 0, opacity: 0.3, background: 'url("/hero.jpg") no-repeat center center/cover', mixBlendMode: 'overlay' }}></div>
                 <div style={{ position: 'relative', zIndex: 1, textAlign: 'center', color: 'white', padding: '40px' }}>
-                    <h1 style={{ fontFamily: 'Playfair Display, serif', fontSize: '3.5rem', marginBottom: '10px' }}>Oesters</h1>
-                    <p style={{ fontSize: '1.2rem', letterSpacing: '2px', textTransform: 'uppercase', opacity: 0.9 }}>Cafe & Resto</p>
+                    <img src="/frankies-logo.jpg" alt="Frankie's Logo" style={{ width: '150px', height: '150px', borderRadius: '50%', objectFit: 'cover', marginBottom: '20px', border: '4px solid white', boxShadow: '0 10px 30px rgba(0,0,0,0.2)' }} />
+                    <h1 style={{ fontFamily: 'Lexend, sans-serif', fontSize: '2.5rem', marginBottom: '5px' }}>Frankie's</h1>
+                    <p style={{ fontSize: '1rem', letterSpacing: '2px', textTransform: 'uppercase', opacity: 0.9 }}>Cloud Kitchen Admin</p>
                 </div>
             </div>
 
@@ -54,7 +58,7 @@ const Login = () => {
                             <Lock size={18} />
                             <span style={{ fontWeight: 700, textTransform: 'uppercase', fontSize: '0.8rem', letterSpacing: '1px' }}>Admin Portal</span>
                         </div>
-                        <h2 style={{ fontSize: '2.5rem', margin: 0, fontFamily: 'Playfair Display, serif', color: 'var(--text)' }}>Welcome Back</h2>
+                        <h2 style={{ fontSize: '2.5rem', margin: 0, fontFamily: 'Lexend, sans-serif', color: 'var(--text)' }}>Welcome Back</h2>
                         <p style={{ color: 'var(--text-muted)' }}>Sign in to manage your dashboard.</p>
                     </div>
 
@@ -75,7 +79,7 @@ const Login = () => {
                                     required
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
-                                    placeholder="admin@oesters.com"
+                                    placeholder="frankies@admin.com"
                                     style={{ width: '100%', padding: '15px 15px 15px 45px', borderRadius: '12px', border: '1px solid #cbd5e1', fontSize: '1rem', outline: 'none', transition: 'all 0.3s' }}
                                 />
                             </div>

@@ -6,9 +6,9 @@ import { supabase } from '../supabaseClient';
 const Footer = () => {
     const location = useLocation();
     const [storeSettings, setStoreSettings] = useState({
-        store_name: 'Oesters Cafe and Resto',
-        address: 'Poblacion, El Nido, Palawan',
-        contact: '09563713967',
+        store_name: "Frankie's Cloud Kitchen",
+        address: 'Calamba, Laguna',
+        contact: '0956 371 3967',
     });
 
     useEffect(() => {
@@ -27,18 +27,15 @@ const Footer = () => {
             <div className="container" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '60px' }}>
                 {/* Brand Section */}
                 <div>
-                    <Link to="/" className="brand" style={{ marginBottom: '15px', display: 'inline-block', fontSize: '1.8rem', fontWeight: 700, textDecoration: 'none', color: 'white', fontFamily: 'Playfair Display, serif' }}>
-                        Oesters
+                    <Link to="/" className="brand" style={{ marginBottom: '15px', display: 'inline-block', fontSize: '1.8rem', fontWeight: 700, textDecoration: 'none', color: 'white', fontFamily: 'Lexend, sans-serif' }}>
+                        Frankie's
                     </Link>
                     <p style={{ color: 'rgba(255,255,255,0.7)', lineHeight: '1.8', marginBottom: '30px' }}>
-                        Freshness in every shell. Experience the best seafood and specialty coffee in town.
+                        Flavor in every bite. Experience the best comfort food and specialty drinks from our cloud kitchen.
                     </p>
                     <div style={{ display: 'flex', gap: '15px' }}>
-                        <a href="https://www.facebook.com/oesterscafeandresto" target="_blank" rel="noopener noreferrer" style={{ color: 'white', background: 'rgba(255,255,255,0.1)', width: '40px', height: '40px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: '0.3s' }}>
+                        <a href="https://www.facebook.com/frankies.cloudkitchen" target="_blank" rel="noopener noreferrer" style={{ color: 'white', background: 'rgba(255,255,255,0.1)', width: '40px', height: '40px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: '0.3s' }}>
                             <Facebook size={20} />
-                        </a>
-                        <a href="#" style={{ color: 'white', background: 'rgba(255,255,255,0.1)', width: '40px', height: '40px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: '0.3s' }}>
-                            <Instagram size={20} />
                         </a>
                     </div>
                 </div>
@@ -74,7 +71,7 @@ const Footer = () => {
                         </div>
                         <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
                             <Mail size={20} style={{ color: 'var(--accent)', flexShrink: 0 }} />
-                            <span style={{ color: 'rgba(255,255,255,0.8)', fontSize: '0.95rem' }}>contact@oesters.com</span>
+                            <span style={{ color: 'rgba(255,255,255,0.8)', fontSize: '0.95rem' }}>frankies@admin.com</span>
                         </div>
                     </div>
                 </div>
