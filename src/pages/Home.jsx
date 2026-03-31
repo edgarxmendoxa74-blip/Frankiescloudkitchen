@@ -11,7 +11,6 @@ import {
     Phone,
     Info,
     Facebook,
-    Star,
     Coffee,
     UtensilsCrossed,
     Clock,
