@@ -76,6 +76,7 @@ const Header = () => {
                     <nav className="header-nav-container">
                         <Link to="/contact" className={`nav-link ${location.pathname === '/contact' ? 'active' : ''}`}>Contact</Link>
 
+                        <button
                             className="btn-accent cart-btn-header"
                             onClick={() => setIsCartOpen(true)}
                         >
