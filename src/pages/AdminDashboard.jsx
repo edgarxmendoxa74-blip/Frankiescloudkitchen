@@ -11,7 +11,8 @@ import {
     X,
     List,
     CreditCard,
-    ShoppingBag
+    ShoppingBag,
+    Archive
 } from 'lucide-react';
 import { categories as initialCategories, menuItems as initialItems } from '../data/MenuData';
 
@@ -22,10 +23,11 @@ import OrderHistory from '../components/admin/OrderHistory';
 import OrderTypeManager from '../components/admin/OrderTypeManager';
 import PaymentSettings from '../components/admin/PaymentSettings';
 import StoreGeneralSettings from '../components/admin/StoreGeneralSettings';
+import InventoryManager from '../components/admin/InventoryManager';
 
 const AdminDashboard = () => {
     const navigate = useNavigate();
-    const [activeTab, setActiveTab] = useState('menu'); // menu, categories, orders, payment, orderTypes, settings
+    const [activeTab, setActiveTab] = useState('menu'); // menu, categories, inventory, orders, payment, orderTypes, settings
     const [message, setMessage] = useState('');
 
     // --- STATE MANAGEMENT ---
@@ -161,6 +163,7 @@ const AdminDashboard = () => {
                 <nav style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
                     <SidebarItem icon={<List size={20} />} label="Menu Items" active={activeTab === 'menu'} onClick={() => setActiveTab('menu')} />
                     <SidebarItem icon={<Tag size={20} />} label="Categories" active={activeTab === 'categories'} onClick={() => setActiveTab('categories')} />
+                    <SidebarItem icon={<Archive size={20} />} label="Inventory" active={activeTab === 'inventory'} onClick={() => setActiveTab('inventory')} />
                     <SidebarItem icon={<ShoppingBag size={20} />} label="Orders" active={activeTab === 'orders'} onClick={() => setActiveTab('orders')} />
                     <SidebarItem icon={<Settings size={20} />} label="Order Types" active={activeTab === 'orderTypes'} onClick={() => setActiveTab('orderTypes')} />
                     <SidebarItem icon={<CreditCard size={20} />} label="Payment Methods" active={activeTab === 'payment'} onClick={() => setActiveTab('payment')} />
@@ -206,6 +209,7 @@ const AdminDashboard = () => {
 
                 {activeTab === 'menu' && <MenuManager items={items} setItems={setItems} categories={categories} showMessage={showMessage} />}
                 {activeTab === 'categories' && <CategoryManager categories={categories} setCategories={setCategories} items={items} showMessage={showMessage} />}
+                {activeTab === 'inventory' && <InventoryManager showMessage={showMessage} />}
                 {activeTab === 'orders' && <OrderHistory orders={orders} setOrders={setOrders} storeSettings={storeSettings} showMessage={showMessage} />}
                 {activeTab === 'orderTypes' && <OrderTypeManager orderTypes={orderTypes} setOrderTypes={setOrderTypes} showMessage={showMessage} />}
                 {activeTab === 'payment' && <PaymentSettings paymentSettings={paymentSettings} setPaymentSettings={setPaymentSettings} showMessage={showMessage} />}
