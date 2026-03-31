@@ -8,22 +8,48 @@ const PaymentSettings = ({ paymentSettings, setPaymentSettings, showMessage }) =
     const [showAddMethod, setShowAddMethod] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false);
 
+    const compressImage = (file) => {
+        return new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    let width = img.width;
+                    let height = img.height;
+                    const MAX_WIDTH = 600; // Smaller for QR codes
+                    if (width > MAX_WIDTH) {
+                        height *= MAX_WIDTH / width;
+                        width = MAX_WIDTH;
+                    }
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+                    resolve(canvas.toDataURL('image/jpeg', 0.8)); // 80% quality
+                };
+                img.src = event.target.result;
+            };
+            reader.readAsDataURL(file);
+        });
+    };
+
     const handleFileUpload = async (e, methodId) => {
         const file = e.target.files[0];
         if (file) {
-            const reader = new FileReader();
-            reader.onloadend = async () => {
-                const qr_url = reader.result;
+            setIsProcessing(true);
+            try {
+                const qr_url = await compressImage(file);
                 const { error } = await supabase.from('payment_settings').update({ qr_url }).eq('id', methodId);
-                if (error) {
-                    console.error(error);
-                    showMessage(`Error saving QR code: ${error.message}`);
-                    return;
-                }
+                if (error) throw error;
                 setPaymentSettings(prev => prev.map(m => m.id === methodId ? { ...m, qr_url } : m));
                 showMessage('QR code updated!');
-            };
-            reader.readAsDataURL(file);
+            } catch (error) {
+                console.error(error);
+                showMessage(`Error saving QR code: ${error.message}`);
+            } finally {
+                setIsProcessing(false);
+            }
         }
     };
 

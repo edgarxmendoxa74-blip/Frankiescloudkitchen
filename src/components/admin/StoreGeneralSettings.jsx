@@ -74,10 +74,35 @@ const StoreGeneralSettings = ({ storeSettings, setStoreSettings, showMessage }) 
         showMessage('General settings saved!');
     };
 
+    const compressImage = (file) => {
+        return new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    let width = img.width;
+                    let height = img.height;
+                    const MAX_WIDTH = 1200; // Slightly larger for banners
+                    if (width > MAX_WIDTH) {
+                        height *= MAX_WIDTH / width;
+                        width = MAX_WIDTH;
+                    }
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+                    resolve(canvas.toDataURL('image/jpeg', 0.7)); // 70% quality
+                };
+                img.src = event.target.result;
+            };
+            reader.readAsDataURL(file);
+        });
+    };
+
     const handleLogoUpload = async (e) => {
         const file = e.target.files[0];
         if (!file) {
-            // Clear logo if no file (triggered by clear button)
             const targetId = await getValidId(storeSettings.id);
             if (targetId) {
                 await supabase.from('store_settings').update({ logo_url: '' }).eq('id', targetId);
@@ -87,9 +112,9 @@ const StoreGeneralSettings = ({ storeSettings, setStoreSettings, showMessage }) 
             return;
         }
 
-        const reader = new FileReader();
-        reader.onloadend = async () => {
-            const logoData = reader.result;
+        setIsProcessing(true);
+        try {
+            const logoData = await compressImage(file);
             const targetId = await getValidId(storeSettings.id);
             let error;
             if (targetId) {
@@ -100,23 +125,24 @@ const StoreGeneralSettings = ({ storeSettings, setStoreSettings, showMessage }) 
                 error = res.error;
                 if (res.data) setStoreSettings(res.data);
             }
-            if (error) {
-                console.error(error);
-                showMessage(`Error saving logo: ${error.message}`);
-                return;
-            }
+            if (error) throw error;
             if (targetId) setStoreSettings({ ...storeSettings, logo_url: logoData });
-            showMessage('Logo uploaded!');
-        };
-        reader.readAsDataURL(file);
+            showMessage('Logo updated!');
+        } catch (error) {
+            console.error(error);
+            showMessage(`Error saving logo: ${error.message}`);
+        } finally {
+            setIsProcessing(false);
+        }
     };
 
     const handleBannerUpload = async (e) => {
         const file = e.target.files[0];
         if (file) {
-            const reader = new FileReader();
-            reader.onloadend = async () => {
-                const newBanners = [...(storeSettings.banner_images || []), reader.result];
+            setIsProcessing(true);
+            try {
+                const compressedData = await compressImage(file);
+                const newBanners = [...(storeSettings.banner_images || []), compressedData];
                 const targetId = await getValidId(storeSettings.id);
                 let error;
                 if (targetId) {
@@ -127,15 +153,15 @@ const StoreGeneralSettings = ({ storeSettings, setStoreSettings, showMessage }) 
                     error = res.error;
                     if (res.data) setStoreSettings(res.data);
                 }
-                if (error) {
-                    console.error(error);
-                    showMessage(`Error saving banner: ${error.message}`);
-                    return;
-                }
+                if (error) throw error;
                 if (targetId) setStoreSettings({ ...storeSettings, banner_images: newBanners });
                 showMessage('Banner uploaded!');
-            };
-            reader.readAsDataURL(file);
+            } catch (error) {
+                console.error(error);
+                showMessage(`Error saving banner: ${error.message}`);
+            } finally {
+                setIsProcessing(false);
+            }
         }
     };
 
@@ -185,6 +211,47 @@ const StoreGeneralSettings = ({ storeSettings, setStoreSettings, showMessage }) 
 
             <form onSubmit={handleSave}>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '30px' }}>
+
+                    <div>
+                        <h3 style={{ fontSize: '1.1rem', marginBottom: '20px', color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <ImageIcon size={20} /> Store Logo
+                        </h3>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '20px', background: '#f8fafc', padding: '20px', borderRadius: '16px', border: '1px solid #e2e8f0' }}>
+                            <div style={{ position: 'relative' }}>
+                                <img
+                                    src={storeSettings.logo_url || '/frankies-logo.jpg'}
+                                    style={{ width: '100px', height: '100px', borderRadius: '50%', objectFit: 'cover', border: '4px solid white', boxShadow: '0 4px 10px rgba(0,0,0,0.1)' }}
+                                    alt="Store Logo"
+                                />
+                                {storeSettings.logo_url && (
+                                    <button
+                                        type="button"
+                                        onClick={() => handleLogoUpload({ target: { files: [] } })}
+                                        style={{ position: 'absolute', top: 0, right: 0, background: '#ef4444', color: 'white', border: 'none', borderRadius: '50%', width: '24px', height: '24px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                    >
+                                        <X size={14} />
+                                    </button>
+                                )}
+                            </div>
+                            <div style={{ flex: 1 }}>
+                                <p style={{ margin: '0 0 10px 0', fontSize: '0.85rem', color: '#64748b' }}>Upload your store logo. Recommended size: 512x512px.</p>
+                                <label style={{
+                                    display: 'inline-block',
+                                    padding: '8px 16px',
+                                    background: 'var(--primary)',
+                                    color: 'white',
+                                    borderRadius: '10px',
+                                    cursor: 'pointer',
+                                    fontSize: '0.85rem',
+                                    fontWeight: 600,
+                                    transition: 'all 0.2s'
+                                }}>
+                                    Change Logo
+                                    <input type="file" accept="image/*" onChange={handleLogoUpload} style={{ display: 'none' }} />
+                                </label>
+                            </div>
+                        </div>
+                    </div>
 
                     <div>
                         <h3 style={{ fontSize: '1.1rem', marginBottom: '20px', color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: '10px' }}>
