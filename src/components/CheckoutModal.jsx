@@ -20,10 +20,10 @@ const CheckoutModal = () => {
     const [customerDetails, setCustomerDetails] = useState({
         name: '',
         phone: '',
-        table_number: '',
         address: '',
-        landmark: '',
-        pickup_time: ''
+        village: '',
+        delivery_mode: 'Store Delivery',
+        landmark: ''
     });
 
     // We might need to fetch paymentSettings and orderTypes here if they aren't in CartContext
@@ -104,12 +104,18 @@ Order Type: ${orderType.toUpperCase()}
 Payment Method: ${paymentMethod}
 
 Customer Details:
-${customerInfoStr}
+Name: ${customerDetails.name}
+Phone: ${customerDetails.phone}
+Address: ${customerDetails.address} ${customerDetails.village ? `(Village: ${customerDetails.village})` : ''}
+Delivery Mode: ${customerDetails.delivery_mode}
+Landmark: ${customerDetails.landmark}
 
 Item Details:
 ${orderDetailsStr}
 
 TOTAL AMOUNT: ₱${cartTotal}
+
+*I will send the payment screenshot shortly.*
 
 Thank you!`.trim();
 
@@ -136,35 +142,49 @@ Thank you!`.trim();
 
                 <div style={{ marginBottom: '30px' }}>
                     <label style={{ fontWeight: 700, fontSize: '1rem', display: 'block', marginBottom: '15px' }}>Payment Method</label>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '12px', marginBottom: '20px' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '12px', marginBottom: '10px' }}>
                         <button
-                            onClick={() => setPaymentMethod('Cash/COD')}
+                            onClick={() => setPaymentMethod('COD')}
                             style={{
                                 padding: '15px', borderRadius: '15px', border: '2px solid',
-                                borderColor: paymentMethod === 'Cash/COD' ? 'var(--primary)' : '#e2e8f0',
-                                background: paymentMethod === 'Cash/COD' ? '#fff1f2' : 'white',
+                                borderColor: paymentMethod === 'COD' ? 'var(--primary)' : '#e2e8f0',
+                                background: paymentMethod === 'COD' ? '#fff1f2' : 'white',
                                 cursor: 'pointer', textAlign: 'center', transition: 'all 0.2s'
                             }}
                         >
                             <div style={{ fontSize: '1.5rem', marginBottom: '5px' }}>💵</div>
-                            <div style={{ fontWeight: 700, fontSize: '0.85rem', color: paymentMethod === 'Cash/COD' ? 'var(--primary)' : 'var(--text-muted)' }}>Cash / COD</div>
+                            <div style={{ fontWeight: 700, fontSize: '0.85rem', color: paymentMethod === 'COD' ? 'var(--primary)' : 'var(--text-muted)' }}>COD</div>
                         </button>
-                        {localPaymentSettings.map(method => (
-                            <button
-                                key={method.id}
-                                onClick={() => setPaymentMethod(method.id)}
-                                style={{
-                                    padding: '15px', borderRadius: '15px', border: '2px solid',
-                                    borderColor: paymentMethod === method.id ? 'var(--primary)' : '#e2e8f0',
-                                    background: paymentMethod === method.id ? '#fff1f2' : 'white',
-                                    cursor: 'pointer', textAlign: 'center', transition: 'all 0.2s'
-                                }}
-                            >
-                                <div style={{ fontSize: '1.5rem', marginBottom: '5px' }}>💳</div>
-                                <div style={{ fontWeight: 700, fontSize: '0.85rem', color: paymentMethod === method.id ? 'var(--primary)' : 'var(--text-muted)' }}>{method.name}</div>
-                            </button>
-                        ))}
+                        <button
+                            onClick={() => setPaymentMethod('Gcash/Maya')}
+                            style={{
+                                padding: '15px', borderRadius: '15px', border: '2px solid',
+                                borderColor: paymentMethod === 'Gcash/Maya' ? 'var(--primary)' : '#e2e8f0',
+                                background: paymentMethod === 'Gcash/Maya' ? '#fff1f2' : 'white',
+                                cursor: 'pointer', textAlign: 'center', transition: 'all 0.2s'
+                            }}
+                        >
+                            <div style={{ fontSize: '1.5rem', marginBottom: '5px' }}>🔵</div>
+                            <div style={{ fontWeight: 700, fontSize: '0.85rem', color: paymentMethod === 'Gcash/Maya' ? 'var(--primary)' : 'var(--text-muted)' }}>Gcash/Maya</div>
+                        </button>
+                        <button
+                            onClick={() => setPaymentMethod('QRPH')}
+                            style={{
+                                padding: '15px', borderRadius: '15px', border: '2px solid',
+                                borderColor: paymentMethod === 'QRPH' ? 'var(--primary)' : '#e2e8f0',
+                                background: paymentMethod === 'QRPH' ? '#fff1f2' : 'white',
+                                cursor: 'pointer', textAlign: 'center', transition: 'all 0.2s'
+                            }}
+                        >
+                            <div style={{ fontSize: '1.5rem', marginBottom: '5px' }}>🔳</div>
+                            <div style={{ fontWeight: 700, fontSize: '0.85rem', color: paymentMethod === 'QRPH' ? 'var(--primary)' : 'var(--text-muted)' }}>QRPH</div>
+                        </button>
                     </div>
+                    {paymentMethod && paymentMethod !== 'COD' && (
+                        <p style={{ fontSize: '0.85rem', color: 'var(--primary)', fontWeight: 600, marginTop: '5px', marginBottom: '15px' }}>
+                            ℹ️ After placing your order, please send a screenshot of your payment via Messenger.
+                        </p>
+                    )}
 
                     {paymentMethod && paymentMethod !== 'Cash/COD' && (
                         <div style={{ background: '#f8fafc', padding: '20px', borderRadius: '20px', border: '1px solid #e2e8f0', marginBottom: '20px' }}>
@@ -225,25 +245,39 @@ Thank you!`.trim();
                     </div>
                 </div>
 
-                {orderType && (
+                {orderType === 'delivery' && (
                     <div style={{ marginBottom: '30px' }}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
                             <div>
                                 <label style={{ display: 'block', fontSize: '0.9rem', marginBottom: '8px', fontWeight: 600 }}>Full Name</label>
                                 <input type="text" value={customerDetails.name} onChange={(e) => setCustomerDetails({ ...customerDetails, name: e.target.value })} style={{ padding: '15px', width: '100%', borderRadius: '12px', border: '1px solid #e2e8f0', outline: 'none' }} placeholder="Your Name" />
                             </div>
-                            {orderType === 'dine-in' && <div><label style={{ display: 'block', fontSize: '0.9rem', marginBottom: '8px', fontWeight: 600 }}>Table Number</label><input type="text" value={customerDetails.table_number} onChange={(e) => setCustomerDetails({ ...customerDetails, table_number: e.target.value })} style={{ padding: '15px', width: '100%', borderRadius: '12px', border: '1px solid #e2e8f0' }} placeholder="Table Number" /></div>}
-                            {orderType !== 'dine-in' && <div><label style={{ display: 'block', fontSize: '0.9rem', marginBottom: '8px', fontWeight: 600 }}>Phone Number</label><input type="tel" value={customerDetails.phone} onChange={(e) => setCustomerDetails({ ...customerDetails, phone: e.target.value })} style={{ padding: '15px', width: '100%', borderRadius: '12px', border: '1px solid #e2e8f0' }} placeholder="09XX XXX XXXX" /></div>}
-                            {orderType === 'pickup' && <div><label style={{ display: 'block', fontSize: '0.9rem', marginBottom: '8px', fontWeight: 600 }}>Pickup Time</label><input type="time" value={customerDetails.pickup_time} onChange={(e) => setCustomerDetails({ ...customerDetails, pickup_time: e.target.value })} style={{ padding: '15px', width: '100%', borderRadius: '12px', border: '1px solid #e2e8f0' }} /></div>}
-                            {orderType === 'delivery' && <div><label style={{ display: 'block', fontSize: '0.9rem', marginBottom: '8px', fontWeight: 600 }}>Delivery Address</label><textarea value={customerDetails.address} onChange={(e) => setCustomerDetails({ ...customerDetails, address: e.target.value })} style={{ padding: '15px', width: '100%', borderRadius: '12px', border: '1px solid #e2e8f0', minHeight: '80px' }} placeholder="Full Delivery Address" /></div>}
                             <div>
-                                <label style={{ display: 'block', fontSize: '0.9rem', marginBottom: '8px', fontWeight: 600 }}>
-                                    {orderType === 'delivery' ? 'Landmark / Instructions' : 'Special Instructions (Optional)'}
-                                </label>
+                                <label style={{ display: 'block', fontSize: '0.9rem', marginBottom: '8px', fontWeight: 600 }}>Phone Number</label>
+                                <input type="tel" value={customerDetails.phone} onChange={(e) => setCustomerDetails({ ...customerDetails, phone: e.target.value })} style={{ padding: '15px', width: '100%', borderRadius: '12px', border: '1px solid #e2e8f0' }} placeholder="09XX XXX XXXX" />
+                            </div>
+                            <div>
+                                <label style={{ display: 'block', fontSize: '0.9rem', marginBottom: '8px', fontWeight: 600 }}>Address (Please include Village)</label>
+                                <textarea value={customerDetails.address} onChange={(e) => setCustomerDetails({ ...customerDetails, address: e.target.value })} style={{ padding: '15px', width: '100%', borderRadius: '12px', border: '1px solid #e2e8f0', minHeight: '80px' }} placeholder="House Number, Street, Village/Subdivision" />
+                            </div>
+                            <div>
+                                <label style={{ display: 'block', fontSize: '0.9rem', marginBottom: '8px', fontWeight: 600 }}>Mode of Delivery</label>
+                                <select 
+                                    value={customerDetails.delivery_mode} 
+                                    onChange={(e) => setCustomerDetails({ ...customerDetails, delivery_mode: e.target.value })} 
+                                    style={{ padding: '15px', width: '100%', borderRadius: '12px', border: '1px solid #e2e8f0', background: 'white' }}
+                                >
+                                    <option value="Store Delivery">Store Delivery</option>
+                                    <option value="Lalamove/Grab">Lalamove/Grab (Booked by Customer)</option>
+                                    <option value="Pickup">Pickup at Store</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label style={{ display: 'block', fontSize: '0.9rem', marginBottom: '8px', fontWeight: 600 }}>Landmark / Instructions</label>
                                 <textarea
                                     value={customerDetails.landmark}
                                     onChange={(e) => setCustomerDetails({ ...customerDetails, landmark: e.target.value })}
-                                    placeholder={orderType === 'delivery' ? "e.g. Near blue gate..." : "e.g. No onions, less ice..."}
+                                    placeholder="e.g. Near blue gate, white house..."
                                     style={{ padding: '15px', width: '100%', borderRadius: '12px', border: '1px solid #e2e8f0', minHeight: '80px' }}
                                 />
                             </div>

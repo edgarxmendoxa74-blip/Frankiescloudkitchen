@@ -4,6 +4,8 @@ import {
     Plus,
     Minus,
     X,
+    Star,
+    Users,
     MessageSquare,
     MapPin,
     Phone,
@@ -406,10 +408,22 @@ const Home = () => {
                                 </div>
                                 {item.promo_price && <span style={{ position: 'absolute', top: '10px', left: '10px', background: '#ef4444', color: 'white', padding: '4px 10px', borderRadius: '20px', fontSize: '0.7rem', fontWeight: 800, zIndex: 5 }}>PROMO</span>}
                                 {item.out_of_stock && <span style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.4)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, borderRadius: '20px', zIndex: 6 }}>OUT OF STOCK</span>}
+                                
+                                {/* Icons for Favorites and Sharing */}
+                                {item.description?.includes('[FAV]') && (
+                                    <div title="Popular Choice" style={{ position: 'absolute', top: '10px', right: '10px', background: 'var(--accent)', color: '#fff', padding: '6px', borderRadius: '50%', display: 'flex', zIndex: 10, boxShadow: '0 4px 10px rgba(255, 155, 0, 0.4)' }}>
+                                        <Star size={14} fill="#fff" />
+                                    </div>
+                                )}
+                                {item.description?.includes('[SHARING]') && (
+                                    <div title="For Sharing" style={{ position: 'absolute', top: item.description?.includes('[FAV]') ? '45px' : '10px', right: '10px', background: 'var(--primary)', color: '#fff', padding: '6px', borderRadius: '50%', display: 'flex', zIndex: 10, boxShadow: '0 4px 10px rgba(255, 0, 144, 0.4)' }}>
+                                        <Users size={14} fill="#fff" />
+                                    </div>
+                                )}
                             </div>
                             <div className="menu-item-info">
                                 <h3 className="menu-item-name">{item.name}</h3>
-                                <p className="menu-item-desc">{item.description}</p>
+                                <p className="menu-item-desc">{item.description?.replace(/\[FAV\]|\[SHARING\]/g, '').trim()}</p>
                                 <div className="menu-item-footer">
                                     <div style={{ display: 'flex', flexDirection: 'column' }}>
                                         {item.promo_price ? (
