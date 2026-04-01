@@ -1,6 +1,6 @@
 import React from 'react';
 import { supabase } from '../../supabaseClient';
-import { Save, Printer, Trash2 } from 'lucide-react';
+import { Save, Printer, Trash2, Copy } from 'lucide-react';
 
 const OrderHistory = ({ orders, setOrders, storeSettings, showMessage }) => {
     const stats = orders.reduce((acc, order) => {
@@ -28,6 +28,22 @@ const OrderHistory = ({ orders, setOrders, storeSettings, showMessage }) => {
         }
     };
 
+    const copyOrderToClipboard = (order) => {
+        let text = `ORDER #${order.id.toString().slice(-6).toUpperCase()}\n`;
+        text += `Date: ${new Date(order.timestamp).toLocaleString()}\n`;
+        text += `Type: ${(order.order_type || 'N/A').toUpperCase()}\n`;
+        if (order.customer_details?.name) text += `Name: ${order.customer_details.name}\n`;
+        if (order.customer_details?.phone) text += `Phone: ${order.customer_details.phone}\n`;
+        if (order.customer_details?.table_number) text += `Table: ${order.customer_details.table_number}\n`;
+        if (order.customer_details?.address) text += `Address: ${order.customer_details.address}\n`;
+        text += `\nITEMS:\n`;
+        (order.items || []).forEach(item => text += `- ${item}\n`);
+        text += `\nTOTAL: ₱${order.total_amount}`;
+        
+        navigator.clipboard.writeText(text);
+        showMessage('Order details copied!');
+    };
+
     const printReceipt = (order) => {
         const printWindow = window.open('', '_blank', 'width=400,height=600');
         printWindow.document.write(`
@@ -49,7 +65,6 @@ const OrderHistory = ({ orders, setOrders, storeSettings, showMessage }) => {
                 </head>
                 <body>
                     <div class="center">
-
                         <div style="font-weight:bold; font-size: 14px; text-transform: uppercase;">${storeSettings.store_name}</div>
                         <div style="margin-top: 2px;">${storeSettings.address}</div>
                         <div>Tel: ${storeSettings.contact}</div>
@@ -59,7 +74,7 @@ const OrderHistory = ({ orders, setOrders, storeSettings, showMessage }) => {
                         <strong>OR#:</strong> ${order.id.toString().slice(-6).toUpperCase()}<br>
                         <strong>Date:</strong> ${new Date(order.timestamp).toLocaleString()}<br>
                         <strong>Type:</strong> ${(order.order_type || 'Dine-in').toUpperCase()}<br>
-                        <strong>Cust:</strong> ${order.customer_details?.name}
+                        <strong>Cust:</strong> ${order.customer_details?.name || 'N/A'}
                         ${order.customer_details?.table_number ? `<br><strong>Table:</strong> ${order.customer_details?.table_number}` : ''}
                     </div>
                     <div class="divider"></div>
@@ -149,6 +164,7 @@ const OrderHistory = ({ orders, setOrders, storeSettings, showMessage }) => {
                                             <Save size={14} /> Save
                                         </button>
                                     </div>
+                                    <button onClick={() => copyOrderToClipboard(order)} style={{ color: 'var(--primary)', background: 'none', border: 'none', cursor: 'pointer' }} title="Copy Order"><Copy size={18} /></button>
                                     <button onClick={() => printReceipt(order)} style={{ color: 'var(--primary)', background: 'none', border: 'none', cursor: 'pointer' }} title="Print Receipt"><Printer size={18} /></button>
                                     <button onClick={() => deleteOrder(order.id)} style={{ color: '#ef4444', background: 'none', border: 'none', cursor: 'pointer' }} title="Delete Order"><Trash2 size={18} /></button>
                                 </div>

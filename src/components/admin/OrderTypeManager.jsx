@@ -12,10 +12,10 @@ const OrderTypeManager = ({ orderTypes, setOrderTypes, showMessage }) => {
     const [localTypes, setLocalTypes] = useState([]);
 
     useEffect(() => {
-        // Merge fixed types with db state
+        // Merge fixed types with db state by name
         const merged = FIXED_TYPES.map(ft => {
-            const existing = orderTypes.find(t => t.id === ft.id);
-            return existing ? existing : { ...ft, is_active: ft.defaultActive };
+            const existing = orderTypes.find(t => t.name.toLowerCase() === ft.name.toLowerCase());
+            return existing ? { ...ft, is_active: existing.is_active } : { ...ft, is_active: ft.defaultActive };
         });
         setLocalTypes(merged);
     }, [orderTypes]);
@@ -26,19 +26,30 @@ const OrderTypeManager = ({ orderTypes, setOrderTypes, showMessage }) => {
         // Optimistic update
         const updated = localTypes.map(t => t.id === type.id ? { ...t, is_active: newStatus, name: type.name } : t);
         setLocalTypes(updated);
-        setOrderTypes(updated);
 
         // Update DB
-        const { error } = await supabase.from('order_types').upsert({
-            id: type.id,
-            name: type.name, // Ensure name is saved (e.g. "Take Out")
-            is_active: newStatus
-        });
+        const dbType = orderTypes.find(t => t.name.toLowerCase() === type.name.toLowerCase());
+        let errorResult;
 
-        if (error) {
-            console.error(error);
-            showMessage(`Error updating: ${error.message}`);
-            // Revert on error would go here
+        if (dbType) {
+            const { error } = await supabase.from('order_types').update({ is_active: newStatus }).eq('id', dbType.id);
+            errorResult = error;
+            if (!error) {
+                setOrderTypes(orderTypes.map(t => t.id === dbType.id ? { ...t, is_active: newStatus } : t));
+            }
+        } else {
+            const { error, data } = await supabase.from('order_types').insert([{ name: type.name, is_active: newStatus }]).select();
+            errorResult = error;
+            if (!error && data && data.length > 0) {
+                setOrderTypes([...orderTypes, data[0]]);
+            }
+        }
+
+        if (errorResult) {
+            console.error(errorResult);
+            showMessage(`Error updating: ${errorResult.message}`);
+            // Revert optimistic update
+            setLocalTypes(localTypes);
         } else {
             showMessage(`${type.name} is now ${newStatus ? 'Active' : 'Inactive'}`);
         }

@@ -40,10 +40,24 @@ const CheckoutModal = () => {
             const fetchData = async () => {
                 const [payRes, typeRes] = await Promise.all([
                     supabase.from('payment_settings').select('*').eq('is_active', true),
-                    supabase.from('order_types').select('*').eq('is_active', true)
+                    supabase.from('order_types').select('*')
                 ]);
+                
                 if (payRes.data) setLocalPaymentSettings(payRes.data);
-                if (typeRes.data && typeRes.data.length > 0) setLocalOrderTypes(typeRes.data);
+                
+                const FIXED_TYPES = [
+                    { id: 'dine-in', name: 'Dine-in', defaultActive: true },
+                    { id: 'pickup', name: 'Take Out', defaultActive: true },
+                    { id: 'delivery', name: 'Delivery', defaultActive: true }
+                ];
+                
+                const dbTypes = typeRes.data || [];
+                const mergedTypes = FIXED_TYPES.map(ft => {
+                    const existing = dbTypes.find(t => t.name.toLowerCase() === ft.name.toLowerCase());
+                    return existing ? { ...ft, is_active: existing.is_active } : { ...ft, is_active: ft.defaultActive };
+                }).filter(t => t.is_active); // Only keep the ones that are active
+                
+                setLocalOrderTypes(mergedTypes);
             };
             fetchData();
         }
@@ -72,36 +86,15 @@ const CheckoutModal = () => {
                 return d;
             });
 
-            const newOrder = {
-                order_type: orderType,
-                payment_method: paymentMethod,
-                customer_details: customerDetails,
-                items: itemDetails,
-                total_amount: cartTotal,
-                status: 'Pending'
-            };
-
-            const { error } = await supabase.from('orders').insert([newOrder]);
-            if (error) throw error;
-
-            const existingOrders = JSON.parse(localStorage.getItem('orders') || '[]');
-            localStorage.setItem('orders', JSON.stringify([...existingOrders, { ...newOrder, id: Date.now(), timestamp: new Date().toISOString() }]));
+            const methodObj = localPaymentSettings.find(m => m.id === paymentMethod);
+            const paymentMethodName = methodObj ? methodObj.name : paymentMethod;
 
             const orderDetailsStr = itemDetails.join('\n');
-            let customerInfoStr = `Name: ${customerDetails.name}`;
-            if (orderType === 'dine-in') customerInfoStr += `\nTable Number: ${customerDetails.table_number}`;
-            if (orderType === 'pickup') customerInfoStr += `\nPhone: ${customerDetails.phone}\nPickup Time: ${customerDetails.pickup_time}`;
-            if (orderType === 'delivery') customerInfoStr += `\nPhone: ${customerDetails.phone}\nAddress: ${customerDetails.address}\nLandmark: ${customerDetails.landmark}`;
-
-            if (orderType !== 'delivery' && customerDetails.landmark) {
-                customerInfoStr += `\nNotes: ${customerDetails.landmark}`;
-            }
-
             const message = `
 Hello! I'd like to place an order:
 
 Order Type: ${orderType.toUpperCase()}
-Payment Method: ${paymentMethod}
+Payment Method: ${paymentMethodName}
 
 Customer Details:
 Name: ${customerDetails.name}
@@ -115,15 +108,35 @@ ${orderDetailsStr}
 
 TOTAL AMOUNT: ₱${cartTotal}
 
-*I will send the payment screenshot shortly.*
+${!paymentMethodName.toLowerCase().includes('cash') && !paymentMethodName.toLowerCase().includes('cod') ? '*I will send the payment screenshot shortly.*' : ''}
 
 Thank you!`.trim();
 
-            const messengerUrl = `https://m.me/frankies.cloudkitchen?text=${encodeURIComponent(message)}`;
-            
-            // On iOS, asynchronous window.open is often blocked by popup blockers.
-            // Using window.location.href ensures the redirect happens reliably.
-            window.location.href = messengerUrl;
+            try {
+                await navigator.clipboard.writeText(message);
+                alert("✅ Order details copied to clipboard!\n\nYou will now be redirected to our Facebook Page. Please paste the details in our messages to confirm your order.");
+            } catch (err) {
+                console.warn("Clipboard copy failed.", err);
+                alert("You will now be redirected to our Facebook Page to send your order.");
+            }
+
+            const newOrder = {
+                order_type: orderType,
+                payment_method: paymentMethodName,
+                customer_details: customerDetails,
+                items: itemDetails,
+                total_amount: cartTotal,
+                status: 'Pending'
+            };
+
+            const { error } = await supabase.from('orders').insert([newOrder]);
+            if (error) throw error;
+
+            const existingOrders = JSON.parse(localStorage.getItem('orders') || '[]');
+            localStorage.setItem('orders', JSON.stringify([...existingOrders, { ...newOrder, id: Date.now(), timestamp: new Date().toISOString() }]));
+
+            const fbPageUrl = `https://www.facebook.com/frankies.cloudkitchen`;
+            window.location.href = fbPageUrl;
 
             clearCart();
             setIsCheckoutOpen(false);
@@ -146,80 +159,77 @@ Thank you!`.trim();
                 <div style={{ marginBottom: '30px' }}>
                     <label style={{ fontWeight: 700, fontSize: '1rem', display: 'block', marginBottom: '15px' }}>Payment Method</label>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '12px', marginBottom: '10px' }}>
-                        <button
-                            onClick={() => setPaymentMethod('COD')}
-                            style={{
-                                padding: '15px', borderRadius: '15px', border: '2px solid',
-                                borderColor: paymentMethod === 'COD' ? 'var(--primary)' : '#e2e8f0',
-                                background: paymentMethod === 'COD' ? '#fff1f2' : 'white',
-                                cursor: 'pointer', textAlign: 'center', transition: 'all 0.2s'
-                            }}
-                        >
-                            <div style={{ fontSize: '1.5rem', marginBottom: '5px' }}>💵</div>
-                            <div style={{ fontWeight: 700, fontSize: '0.85rem', color: paymentMethod === 'COD' ? 'var(--primary)' : 'var(--text-muted)' }}>COD</div>
-                        </button>
-                        <button
-                            onClick={() => setPaymentMethod('Gcash/Maya')}
-                            style={{
-                                padding: '15px', borderRadius: '15px', border: '2px solid',
-                                borderColor: paymentMethod === 'Gcash/Maya' ? 'var(--primary)' : '#e2e8f0',
-                                background: paymentMethod === 'Gcash/Maya' ? '#fff1f2' : 'white',
-                                cursor: 'pointer', textAlign: 'center', transition: 'all 0.2s'
-                            }}
-                        >
-                            <div style={{ fontSize: '1.5rem', marginBottom: '5px' }}>🔵</div>
-                            <div style={{ fontWeight: 700, fontSize: '0.85rem', color: paymentMethod === 'Gcash/Maya' ? 'var(--primary)' : 'var(--text-muted)' }}>Gcash/Maya</div>
-                        </button>
-                        <button
-                            onClick={() => setPaymentMethod('QRPH')}
-                            style={{
-                                padding: '15px', borderRadius: '15px', border: '2px solid',
-                                borderColor: paymentMethod === 'QRPH' ? 'var(--primary)' : '#e2e8f0',
-                                background: paymentMethod === 'QRPH' ? '#fff1f2' : 'white',
-                                cursor: 'pointer', textAlign: 'center', transition: 'all 0.2s'
-                            }}
-                        >
-                            <div style={{ fontSize: '1.5rem', marginBottom: '5px' }}>🔳</div>
-                            <div style={{ fontWeight: 700, fontSize: '0.85rem', color: paymentMethod === 'QRPH' ? 'var(--primary)' : 'var(--text-muted)' }}>QRPH</div>
-                        </button>
+                        {localPaymentSettings.map(method => {
+                            const isSelected = paymentMethod === method.id;
+                            let icon = '💵';
+                            const lowerName = method.name.toLowerCase();
+                            if (lowerName.includes('gcash') || lowerName.includes('maya')) icon = '🔵';
+                            if (lowerName.includes('qr') || lowerName.includes('ph')) icon = '🔳';
+                            
+                            return (
+                                <button
+                                    key={method.id}
+                                    onClick={() => setPaymentMethod(method.id)}
+                                    style={{
+                                        padding: '15px', borderRadius: '15px', border: '2px solid',
+                                        borderColor: isSelected ? 'var(--primary)' : '#e2e8f0',
+                                        background: isSelected ? '#fff1f2' : 'white',
+                                        cursor: 'pointer', textAlign: 'center', transition: 'all 0.2s'
+                                    }}
+                                >
+                                    <div style={{ fontSize: '1.5rem', marginBottom: '5px' }}>{icon}</div>
+                                    <div style={{ fontWeight: 700, fontSize: '0.85rem', color: isSelected ? 'var(--primary)' : 'var(--text-muted)' }}>{method.name}</div>
+                                </button>
+                            );
+                        })}
                     </div>
-                    {paymentMethod && paymentMethod !== 'COD' && (
-                        <p style={{ fontSize: '0.85rem', color: 'var(--primary)', fontWeight: 600, marginTop: '5px', marginBottom: '15px' }}>
-                            ℹ️ After placing your order, please send a screenshot of your payment via Messenger.
-                        </p>
-                    )}
 
-                    {paymentMethod && paymentMethod !== 'Cash/COD' && (
-                        <div style={{ background: '#f8fafc', padding: '20px', borderRadius: '20px', border: '1px solid #e2e8f0', marginBottom: '20px' }}>
-                            {(() => {
-                                const method = localPaymentSettings.find(m => m.id === paymentMethod);
-                                if (!method) return null;
-                                return (
-                                    <div style={{ textAlign: 'center' }}>
-                                        <h4 style={{ color: 'var(--primary)', marginBottom: '15px' }}>Send {method.name} Payment</h4>
-                                        {method.qr_url && (
-                                            <div style={{ background: 'white', padding: '10px', borderRadius: '12px', border: '1px solid #e2e8f0', display: 'inline-block', marginBottom: '20px' }}>
-                                                <img src={method.qr_url} style={{ width: '180px', height: '180px', borderRadius: '10px', objectFit: 'contain' }} alt="QR Code" />
-                                            </div>
-                                        )}
-                                        <div style={{ background: 'white', padding: '15px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-                                            <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '5px' }}>Account Number</div>
-                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', marginBottom: '8px' }}>
-                                                <div style={{ fontSize: '1.3rem', fontWeight: 800, color: 'var(--primary)' }}>{method.account_number}</div>
-                                                <button
-                                                    onClick={() => { navigator.clipboard.writeText(method.account_number); alert('Copied!'); }}
-                                                    style={{ border: 'none', background: 'var(--primary)', color: 'white', borderRadius: '6px', padding: '6px 10px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 600, fontSize: '0.8rem' }}
-                                                >
-                                                    <Copy size={14} /> Copy
-                                                </button>
-                                            </div>
-                                            <div style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-muted)' }}>{method.account_name}</div>
+                    {(() => {
+                        if (!paymentMethod) return null;
+                        const method = localPaymentSettings.find(m => m.id === paymentMethod);
+                        if (!method) return null;
+                        
+                        const lowerName = method.name.toLowerCase();
+                        const isCash = (lowerName.includes('cash') && !lowerName.includes('gcash')) || lowerName.includes('cod');
+                        
+                        return (
+                            <>
+                                {!isCash && (
+                                    <p style={{ fontSize: '0.85rem', color: 'var(--primary)', fontWeight: 600, marginTop: '5px', marginBottom: '15px' }}>
+                                        ℹ️ After placing your order, please send a screenshot of your payment via Messenger.
+                                    </p>
+                                )}
+                                
+                                {!isCash && (method.account_number || method.qr_url) && (
+                                    <div style={{ background: '#f8fafc', padding: '20px', borderRadius: '20px', border: '1px solid #e2e8f0', marginBottom: '20px' }}>
+                                        <div style={{ textAlign: 'center' }}>
+                                            <h4 style={{ color: 'var(--primary)', marginBottom: '15px' }}>Send {method.name} Payment</h4>
+                                            {method.qr_url && (
+                                                <div style={{ background: 'white', padding: '10px', borderRadius: '12px', border: '1px solid #e2e8f0', display: 'inline-block', marginBottom: '20px' }}>
+                                                    <img src={method.qr_url} style={{ width: '180px', height: '180px', borderRadius: '10px', objectFit: 'contain' }} alt="QR Code" />
+                                                </div>
+                                            )}
+                                            {method.account_number && !method.name.toLowerCase().includes('qr') && (
+                                                <div style={{ background: 'white', padding: '15px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                                                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '5px' }}>Account Number</div>
+                                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', marginBottom: '8px' }}>
+                                                        <div style={{ fontSize: '1.3rem', fontWeight: 800, color: 'var(--primary)' }}>{method.account_number}</div>
+                                                        <button
+                                                            onClick={() => { navigator.clipboard.writeText(method.account_number); alert('Copied!'); }}
+                                                            style={{ border: 'none', background: 'var(--primary)', color: 'white', borderRadius: '6px', padding: '6px 10px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 600, fontSize: '0.8rem' }}
+                                                        >
+                                                            <Copy size={14} /> Copy
+                                                        </button>
+                                                    </div>
+                                                    {method.account_name && <div style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-muted)' }}>{method.account_name}</div>}
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
-                                );
-                            })()}
-                        </div>
-                    )}
+                                )}
+                            </>
+                        );
+                    })()}
                 </div>
 
                 <div style={{ marginBottom: '30px' }}>
@@ -248,51 +258,110 @@ Thank you!`.trim();
                     </div>
                 </div>
 
-                {orderType === 'delivery' && (
+                {orderType && (
                     <div style={{ marginBottom: '30px' }}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
                             <div>
                                 <label style={{ display: 'block', fontSize: '0.9rem', marginBottom: '8px', fontWeight: 600 }}>Full Name</label>
                                 <input type="text" value={customerDetails.name} onChange={(e) => setCustomerDetails({ ...customerDetails, name: e.target.value })} style={{ padding: '15px', width: '100%', borderRadius: '12px', border: '1px solid #e2e8f0', outline: 'none' }} placeholder="Your Name" />
                             </div>
-                            <div>
-                                <label style={{ display: 'block', fontSize: '0.9rem', marginBottom: '8px', fontWeight: 600 }}>Phone Number</label>
-                                <input type="tel" value={customerDetails.phone} onChange={(e) => setCustomerDetails({ ...customerDetails, phone: e.target.value })} style={{ padding: '15px', width: '100%', borderRadius: '12px', border: '1px solid #e2e8f0' }} placeholder="09XX XXX XXXX" />
-                            </div>
-                            <div>
-                                <label style={{ display: 'block', fontSize: '0.9rem', marginBottom: '8px', fontWeight: 600 }}>Address (Please include Village)</label>
-                                <textarea value={customerDetails.address} onChange={(e) => setCustomerDetails({ ...customerDetails, address: e.target.value })} style={{ padding: '15px', width: '100%', borderRadius: '12px', border: '1px solid #e2e8f0', minHeight: '80px' }} placeholder="House Number, Street, Village/Subdivision" />
-                            </div>
-                            <div>
-                                <label style={{ display: 'block', fontSize: '0.9rem', marginBottom: '8px', fontWeight: 600 }}>Mode of Delivery</label>
-                                <select 
-                                    value={customerDetails.delivery_mode} 
-                                    onChange={(e) => setCustomerDetails({ ...customerDetails, delivery_mode: e.target.value })} 
-                                    style={{ padding: '15px', width: '100%', borderRadius: '12px', border: '1px solid #e2e8f0', background: 'white' }}
-                                >
-                                    <option value="Store Delivery">Store Delivery</option>
-                                    <option value="Lalamove/Grab">Lalamove/Grab (Booked by Customer)</option>
-                                    <option value="Pickup">Pickup at Store</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label style={{ display: 'block', fontSize: '0.9rem', marginBottom: '8px', fontWeight: 600 }}>Landmark / Instructions</label>
-                                <textarea
-                                    value={customerDetails.landmark}
-                                    onChange={(e) => setCustomerDetails({ ...customerDetails, landmark: e.target.value })}
-                                    placeholder="e.g. Near blue gate, white house..."
-                                    style={{ padding: '15px', width: '100%', borderRadius: '12px', border: '1px solid #e2e8f0', minHeight: '80px' }}
-                                />
-                            </div>
+
+                            {(orderType === 'delivery' || orderType === 'pickup') && (
+                                <div>
+                                    <label style={{ display: 'block', fontSize: '0.9rem', marginBottom: '8px', fontWeight: 600 }}>Phone Number</label>
+                                    <input type="tel" value={customerDetails.phone} onChange={(e) => setCustomerDetails({ ...customerDetails, phone: e.target.value })} style={{ padding: '15px', width: '100%', borderRadius: '12px', border: '1px solid #e2e8f0' }} placeholder="09XX XXX XXXX" />
+                                </div>
+                            )}
+
+                            {orderType === 'pickup' && (
+                                <div>
+                                    <label style={{ display: 'block', fontSize: '0.9rem', marginBottom: '8px', fontWeight: 600 }}>Pickup Time / Estimated Arrival</label>
+                                    <input type="text" value={customerDetails.pickup_time || ''} onChange={(e) => setCustomerDetails({ ...customerDetails, pickup_time: e.target.value })} style={{ padding: '15px', width: '100%', borderRadius: '12px', border: '1px solid #e2e8f0' }} placeholder="e.g. 5:30 PM, In 30 mins" />
+                                </div>
+                            )}
+
+                            {orderType === 'dine-in' && (
+                                <div>
+                                    <label style={{ display: 'block', fontSize: '0.9rem', marginBottom: '8px', fontWeight: 600 }}>Table Number</label>
+                                    <input type="text" value={customerDetails.table_number || ''} onChange={(e) => setCustomerDetails({ ...customerDetails, table_number: e.target.value })} style={{ padding: '15px', width: '100%', borderRadius: '12px', border: '1px solid #e2e8f0' }} placeholder="e.g. Table 4" />
+                                </div>
+                            )}
+
+                            {orderType === 'delivery' && (
+                                <>
+                                    <div>
+                                        <label style={{ display: 'block', fontSize: '0.9rem', marginBottom: '8px', fontWeight: 600 }}>Address (Please include Village)</label>
+                                        <textarea value={customerDetails.address} onChange={(e) => setCustomerDetails({ ...customerDetails, address: e.target.value })} style={{ padding: '15px', width: '100%', borderRadius: '12px', border: '1px solid #e2e8f0', minHeight: '80px' }} placeholder="House Number, Street, Village/Subdivision" />
+                                    </div>
+                                    <div>
+                                        <label style={{ display: 'block', fontSize: '0.9rem', marginBottom: '8px', fontWeight: 600 }}>Mode of Delivery</label>
+                                        <select 
+                                            value={customerDetails.delivery_mode} 
+                                            onChange={(e) => setCustomerDetails({ ...customerDetails, delivery_mode: e.target.value })} 
+                                            style={{ padding: '15px', width: '100%', borderRadius: '12px', border: '1px solid #e2e8f0', background: 'white' }}
+                                        >
+                                            <option value="Store Delivery">Store Delivery</option>
+                                            <option value="Lalamove/Grab">Lalamove/Grab (Booked by Customer)</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label style={{ display: 'block', fontSize: '0.9rem', marginBottom: '8px', fontWeight: 600 }}>Landmark / Instructions</label>
+                                        <textarea
+                                            value={customerDetails.landmark}
+                                            onChange={(e) => setCustomerDetails({ ...customerDetails, landmark: e.target.value })}
+                                            placeholder="e.g. Near blue gate, white house..."
+                                            style={{ padding: '15px', width: '100%', borderRadius: '12px', border: '1px solid #e2e8f0', minHeight: '80px' }}
+                                        />
+                                    </div>
+                                </>
+                            )}
                         </div>
                     </div>
                 )}
 
                 <div style={{ padding: '20px', background: '#f8fafc', borderRadius: '18px', border: '1px solid #e2e8f0', marginBottom: '30px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
                         <span style={{ fontSize: '1.1rem', fontWeight: 600, color: 'var(--text-muted)' }}>Total Amount:</span>
                         <span style={{ fontSize: '1.8rem', fontWeight: 800, color: 'var(--primary)' }}>₱{cartTotal}</span>
                     </div>
+                    <button
+                        onClick={() => {
+                            const methodObj = localPaymentSettings.find(m => m.id === paymentMethod);
+                            const paymentMethodName = methodObj ? methodObj.name : paymentMethod || 'Not Selected';
+
+                            const itemDetails = cart.map(item => {
+                                let d = `${item.name} (x${item.quantity})`;
+                                if (item.selectedVariation) d += ` - ${item.selectedVariation.name}`;
+                                if (item.selectedFlavors && item.selectedFlavors.length > 0) d += ` [${item.selectedFlavors.join(', ')}]`;
+                                if (item.selectedAddons && item.selectedAddons.length > 0) d += ` + ${item.selectedAddons.map(a => a.name).join(', ')}`;
+                                return d;
+                            });
+
+                            const message = `
+Hello! I'd like to place an order:
+
+Order Type: ${(orderType || 'Not Selected').toUpperCase()}
+Payment Method: ${paymentMethodName}
+
+Customer Details:
+Name: ${customerDetails.name}
+Phone: ${customerDetails.phone}
+Address: ${customerDetails.address} ${customerDetails.village ? `(Village: ${customerDetails.village})` : ''}
+Delivery Mode: ${customerDetails.delivery_mode}
+Landmark: ${customerDetails.landmark}
+
+Item Details:
+${itemDetails.join('\n')}
+
+TOTAL AMOUNT: ₱${cartTotal}
+`.trim();
+                            navigator.clipboard.writeText(message);
+                            alert('Order details manually copied!');
+                        }}
+                        style={{ width: '100%', padding: '12px', borderRadius: '10px', background: '#e2e8f0', color: 'var(--primary)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontWeight: 600, transition: 'background 0.2s' }}
+                    >
+                        <Copy size={16} /> Copy Order Details
+                    </button>
                 </div>
 
                 <button
