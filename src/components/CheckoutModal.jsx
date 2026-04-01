@@ -349,19 +349,11 @@ Thank you!`.trim();
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                     <button
                         className={`btn-primary ${isPlacingOrder ? 'btn-loading' : ''}`}
-                        onClick={() => handlePlaceOrder('android')}
-                        disabled={isPlacingOrder}
-                        style={{ width: '100%', padding: '18px', borderRadius: '16px', fontSize: '1rem', color: '#000' }}
-                    >
-                        <MessageSquare size={20} /> {isPlacingOrder ? 'Processing...' : 'COPY ORDER DETAILS & MESSAGE STORE'}
-                    </button>
-                    <button
-                        className={`btn-secondary ${isPlacingOrder ? 'btn-loading' : ''}`}
                         onClick={() => handlePlaceOrder('ios')}
                         disabled={isPlacingOrder}
-                        style={{ width: '100%', padding: '18px', borderRadius: '16px', fontSize: '1rem', color: '#000' }}
+                        style={{ width: '100%', padding: '18px', borderRadius: '16px', fontSize: '1.1rem', fontWeight: 800, color: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}
                     >
-                        <Copy size={20} /> {isPlacingOrder ? 'Processing...' : 'COPY ORDER DETAILS & MESSAGE STORE (iOS)'}
+                        <BagIcon size={22} /> {isPlacingOrder ? 'Processing...' : 'CONFIRM ORDER'}
                     </button>
                 </div>
             </div>
