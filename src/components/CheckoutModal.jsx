@@ -22,9 +22,11 @@ const CheckoutModal = () => {
         phone: '',
         address: '',
         village: '',
-        delivery_mode: 'Store Delivery',
+        delivery_mode: 'Store Delivery (FREE)',
         landmark: ''
     });
+
+    const [orderSuccess, setOrderSuccess] = useState(false);
 
     // We might need to fetch paymentSettings and orderTypes here if they aren't in CartContext
     // For now let's assume we fetch them here to be self-contained
@@ -130,13 +132,13 @@ Thank you!`.trim();
             if (deviceType === 'ios') {
                 try {
                     await navigator.clipboard.writeText(message);
-                    alert("✅ Order details copied to clipboard!\n\nYou will now be redirected to our Facebook Page. Please paste the details in our messages to confirm your order.");
+                    setOrderSuccess(true);
+                    // We don't redirect immediately so they can read the "What's Next" instructions
+                    return; 
                 } catch (err) {
                     console.warn("Clipboard copy failed.", err);
-                    alert("You will now be redirected to our Facebook Page to send your order.");
+                    window.location.href = `https://www.facebook.com/frankies.cloudkitchen`;
                 }
-                const fbPageUrl = `https://www.facebook.com/frankies.cloudkitchen`;
-                window.location.href = fbPageUrl;
             } else {
                 // Android flow: Direct Messenger Integration
                 try {
@@ -318,7 +320,7 @@ Thank you!`.trim();
                                             onChange={(e) => setCustomerDetails({ ...customerDetails, delivery_mode: e.target.value })} 
                                             style={{ padding: '15px', width: '100%', borderRadius: '12px', border: '1px solid #e2e8f0', background: 'white' }}
                                         >
-                                            <option value="Store Delivery">Store Delivery</option>
+                                            <option value="Store Delivery (FREE)">Store Delivery (FREE)</option>
                                             <option value="Lalamove/Grab">Lalamove/Grab (Booked by Customer)</option>
                                         </select>
                                     </div>
@@ -342,46 +344,6 @@ Thank you!`.trim();
                         <span style={{ fontSize: '1.1rem', fontWeight: 600, color: 'var(--text-muted)' }}>Total Amount:</span>
                         <span style={{ fontSize: '1.8rem', fontWeight: 800, color: 'var(--primary)' }}>₱{cartTotal}</span>
                     </div>
-                    <button
-                        onClick={() => {
-                            const methodObj = localPaymentSettings.find(m => m.id === paymentMethod);
-                            const paymentMethodName = methodObj ? methodObj.name : paymentMethod || 'Not Selected';
-
-                            const itemDetails = cart.map(item => {
-                                let d = `${item.name} (x${item.quantity})`;
-                                if (item.selectedVariation) d += ` - ${item.selectedVariation.name}`;
-                                if (item.selectedFlavors && item.selectedFlavors.length > 0) d += ` [${item.selectedFlavors.join(', ')}]`;
-                                if (item.selectedAddons && item.selectedAddons.length > 0) d += ` + ${item.selectedAddons.map(a => a.name).join(', ')}`;
-                                return d;
-                            });
-
-                            const message = `
-Hello! I'd like to place an order:
-
-Order Type: ${(orderType || 'Not Selected').toUpperCase()}
-Payment Method: ${paymentMethodName}
-
-Customer Details:
-Name: ${customerDetails.name}
-Phone: ${customerDetails.phone}
-Address: ${customerDetails.address} ${customerDetails.village ? `(Village: ${customerDetails.village})` : ''}
-Delivery Mode: ${customerDetails.delivery_mode}
-Landmark: ${customerDetails.landmark}
-
-Item Details:
-${itemDetails.join('\n')}
-
-TOTAL AMOUNT: ₱${cartTotal}
-`.trim();
-                            navigator.clipboard.writeText(message);
-                            alert('Order details manually copied!');
-                        }}
-                        style={{ width: '100%', padding: '14px', borderRadius: '12px', background: 'rgba(255,255,255,0.8)', color: 'var(--text-muted)', border: '1px solid rgba(0,0,0,0.08)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontWeight: 600, transition: 'all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)', boxShadow: '0 2px 8px rgba(0,0,0,0.02)' }}
-                        onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 6px 15px rgba(0,0,0,0.06)'; e.currentTarget.style.color = 'var(--primary)'; }}
-                        onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.02)'; e.currentTarget.style.color = 'var(--text-muted)'; }}
-                    >
-                        <Copy size={16} /> Copy Order Details
-                    </button>
                 </div>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
@@ -389,20 +351,58 @@ TOTAL AMOUNT: ₱${cartTotal}
                         className={`btn-primary ${isPlacingOrder ? 'btn-loading' : ''}`}
                         onClick={() => handlePlaceOrder('android')}
                         disabled={isPlacingOrder}
-                        style={{ width: '100%', padding: '18px', borderRadius: '16px', fontSize: '1.1rem' }}
+                        style={{ width: '100%', padding: '18px', borderRadius: '16px', fontSize: '1rem', color: '#000' }}
                     >
-                        <MessageSquare size={20} /> {isPlacingOrder ? 'Processing...' : 'Send Order'}
+                        <MessageSquare size={20} /> {isPlacingOrder ? 'Processing...' : 'COPY ORDER DETAILS & MESSAGE STORE'}
                     </button>
                     <button
                         className={`btn-secondary ${isPlacingOrder ? 'btn-loading' : ''}`}
                         onClick={() => handlePlaceOrder('ios')}
                         disabled={isPlacingOrder}
-                        style={{ width: '100%', padding: '18px', borderRadius: '16px', fontSize: '1rem' }}
+                        style={{ width: '100%', padding: '18px', borderRadius: '16px', fontSize: '1rem', color: '#000' }}
                     >
-                        <Copy size={20} /> {isPlacingOrder ? 'Processing...' : 'Send Order for iOS Users'}
+                        <Copy size={20} /> {isPlacingOrder ? 'Processing...' : 'COPY ORDER DETAILS & MESSAGE STORE (iOS)'}
                     </button>
                 </div>
             </div>
+
+            {orderSuccess && (
+                <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', zIndex: 5000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', backdropFilter: 'blur(8px)' }}>
+                    <div style={{ background: 'white', maxWidth: '380px', width: '100%', borderRadius: '24px', padding: '30px', textAlign: 'center', boxShadow: '0 25px 50px rgba(0,0,0,0.3)' }}>
+                        <div style={{ fontSize: '3rem', marginBottom: '15px' }}>✅</div>
+                        <h2 style={{ color: '#10b981', marginBottom: '12px', fontSize: '1.25rem', lineHeight: '1.3' }}>Your complete order is COPIED and READY TO PASTE!</h2>
+                        <p style={{ color: 'var(--text-muted)', marginBottom: '20px', fontSize: '0.95rem' }}>You will now be redirected to Frankie's facebook page.</p>
+                        
+                        <div style={{ background: '#f8fafc', padding: '20px', borderRadius: '16px', textAlign: 'left', marginBottom: '25px', border: '1px solid #e2e8f0' }}>
+                            <h3 style={{ fontSize: '1.1rem', fontWeight: 800, marginBottom: '15px', color: 'var(--primary)', fontFamily: 'Lexend, sans-serif' }}>What's Next?</h3>
+                            <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                <li style={{ display: 'flex', gap: '12px', fontSize: '0.9rem', lineHeight: '1.4' }}>
+                                    <span style={{ fontWeight: 700 }}>1.</span>
+                                    <span>Paste your order details as a message to confirm your order. 📝</span>
+                                </li>
+                                <li style={{ display: 'flex', gap: '12px', fontSize: '0.9rem', lineHeight: '1.4' }}>
+                                    <span style={{ fontWeight: 700 }}>2.</span>
+                                    <span>Send your payment screenshot and wait for staff to confirm receipt. ✔️</span>
+                                </li>
+                                <li style={{ display: 'flex', gap: '12px', fontSize: '0.9rem', lineHeight: '1.4' }}>
+                                    <span style={{ fontWeight: 700 }}>3.</span>
+                                    <span>Wait for your order to be delivered and enjoy! 🥳</span>
+                                </li>
+                            </ul>
+                        </div>
+                        
+                        <p style={{ fontWeight: 700, marginBottom: '20px', color: 'var(--text-dark)', fontSize: '0.95rem' }}>Thank you!</p>
+
+                        <button 
+                            onClick={() => window.location.href = 'https://www.facebook.com/frankies.cloudkitchen'}
+                            className="btn-primary"
+                            style={{ width: '100%', padding: '16px', borderRadius: '12px', fontWeight: 800, fontSize: '1rem', color: '#000' }}
+                        >
+                            PROCEED TO MESSENGER
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
