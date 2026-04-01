@@ -120,7 +120,10 @@ TOTAL AMOUNT: ₱${cartTotal}
 Thank you!`.trim();
 
             const messengerUrl = `https://m.me/frankies.cloudkitchen?text=${encodeURIComponent(message)}`;
-            window.open(messengerUrl, '_blank');
+            
+            // On iOS, asynchronous window.open is often blocked by popup blockers.
+            // Using window.location.href ensures the redirect happens reliably.
+            window.location.href = messengerUrl;
 
             clearCart();
             setIsCheckoutOpen(false);
