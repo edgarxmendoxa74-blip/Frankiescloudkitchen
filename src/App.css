@@ -288,35 +288,83 @@ body {
 }
 
 /* Button Styles */
-.btn-primary {
-  background: var(--primary);
-  color: #fff;
+.btn-primary, .btn-accent, .btn-secondary {
+  position: relative;
+  overflow: hidden;
   border: none;
-  padding: 12px 24px;
-  border-radius: 30px;
-  font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s;
+  font-family: 'Lexend', sans-serif;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  z-index: 1;
+}
+
+.btn-primary {
+  background: transparent;
+  color: var(--primary);
+  padding: 12px 28px;
+  border-radius: 8px;
+  font-weight: 700;
+  border: 1.5px solid var(--primary);
+  box-shadow: none;
 }
 
 .btn-primary:hover {
-  background: var(--primary-light);
   transform: translateY(-2px);
+  background: var(--primary);
+  color: #fff;
+  box-shadow: 0 8px 20px rgba(255, 0, 144, 0.15);
+}
+
+.btn-primary:active {
+  transform: translateY(0) scale(0.97);
+  box-shadow: 0 2px 5px rgba(255, 0, 144, 0.05);
 }
 
 .btn-accent {
-  background: var(--accent);
-  color: var(--primary-dark);
-  border: none;
-  padding: 10px 20px;
-  border-radius: 30px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.3s;
+  background: transparent;
+  color: var(--accent);
+  padding: 12px 26px;
+  border-radius: 8px;
+  font-weight: 800;
+  border: 1.5px solid var(--accent);
+  box-shadow: none;
 }
 
 .btn-accent:hover {
-  background: var(--accent-light);
+  transform: translateY(-2px);
+  background: var(--accent);
+  color: #fff;
+  box-shadow: 0 8px 20px rgba(255, 155, 0, 0.15);
+}
+
+.btn-accent:active {
+  transform: translateY(0) scale(0.97);
+}
+
+.btn-secondary {
+  background: transparent;
+  color: var(--primary);
+  border: 1.5px solid var(--primary);
+  padding: 12px 28px;
+  border-radius: 8px;
+  font-weight: 600;
+  box-shadow: none;
+}
+
+.btn-secondary:hover {
+  background: rgba(255, 0, 144, 0.05);
+  border-color: var(--primary-dark);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 0, 144, 0.05);
+  color: var(--primary-dark);
+}
+
+.btn-secondary:active {
+  transform: translateY(0) scale(0.97);
 }
 
 /* Sticky Cart */

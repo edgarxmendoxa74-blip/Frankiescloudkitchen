@@ -63,7 +63,7 @@ const CheckoutModal = () => {
         }
     }, [isCheckoutOpen]);
 
-    const handlePlaceOrder = async () => {
+    const handlePlaceOrder = async (deviceType = 'android') => {
         if (!orderType) {
             alert('Please select an order type (Dine-in, Pickup, or Delivery).');
             return;
@@ -112,14 +112,6 @@ ${!paymentMethodName.toLowerCase().includes('cash') && !paymentMethodName.toLowe
 
 Thank you!`.trim();
 
-            try {
-                await navigator.clipboard.writeText(message);
-                alert("✅ Order details copied to clipboard!\n\nYou will now be redirected to our Facebook Page. Please paste the details in our messages to confirm your order.");
-            } catch (err) {
-                console.warn("Clipboard copy failed.", err);
-                alert("You will now be redirected to our Facebook Page to send your order.");
-            }
-
             const newOrder = {
                 order_type: orderType,
                 payment_method: paymentMethodName,
@@ -135,8 +127,26 @@ Thank you!`.trim();
             const existingOrders = JSON.parse(localStorage.getItem('orders') || '[]');
             localStorage.setItem('orders', JSON.stringify([...existingOrders, { ...newOrder, id: Date.now(), timestamp: new Date().toISOString() }]));
 
-            const fbPageUrl = `https://www.facebook.com/frankies.cloudkitchen`;
-            window.location.href = fbPageUrl;
+            if (deviceType === 'ios') {
+                try {
+                    await navigator.clipboard.writeText(message);
+                    alert("✅ Order details copied to clipboard!\n\nYou will now be redirected to our Facebook Page. Please paste the details in our messages to confirm your order.");
+                } catch (err) {
+                    console.warn("Clipboard copy failed.", err);
+                    alert("You will now be redirected to our Facebook Page to send your order.");
+                }
+                const fbPageUrl = `https://www.facebook.com/frankies.cloudkitchen`;
+                window.location.href = fbPageUrl;
+            } else {
+                // Android flow: Direct Messenger Integration
+                try {
+                    // Try to copy the text quietly so the user can easily paste if needed
+                    await navigator.clipboard.writeText(message);
+                } catch(e) { /* ignore */ }
+                
+                // Route directly to their Messenger username!
+                window.location.href = `https://m.me/frankies.cloudkitchen`;
+            }
 
             clearCart();
             setIsCheckoutOpen(false);
@@ -167,16 +177,20 @@ Thank you!`.trim();
                             if (lowerName.includes('qr') || lowerName.includes('ph')) icon = '🔳';
                             
                             return (
-                                <button
-                                    key={method.id}
-                                    onClick={() => setPaymentMethod(method.id)}
-                                    style={{
-                                        padding: '15px', borderRadius: '15px', border: '2px solid',
-                                        borderColor: isSelected ? 'var(--primary)' : '#e2e8f0',
-                                        background: isSelected ? '#fff1f2' : 'white',
-                                        cursor: 'pointer', textAlign: 'center', transition: 'all 0.2s'
-                                    }}
-                                >
+                                    <button
+                                        key={method.id}
+                                        onClick={() => setPaymentMethod(method.id)}
+                                        style={{
+                                            padding: '16px', borderRadius: '16px', border: '1px solid',
+                                            borderColor: isSelected ? 'var(--primary)' : 'rgba(0,0,0,0.06)',
+                                            background: isSelected ? '#fff1f2' : '#ffffff',
+                                            cursor: 'pointer', textAlign: 'center', transition: 'all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)',
+                                            transform: isSelected ? 'translateY(-2px)' : 'translateY(0)',
+                                            boxShadow: isSelected ? '0 8px 20px rgba(255, 0, 144, 0.12)' : '0 4px 10px rgba(0,0,0,0.02)'
+                                        }}
+                                        onMouseEnter={(e) => { if(!isSelected) { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 6px 15px rgba(0,0,0,0.05)'; e.currentTarget.style.borderColor = 'rgba(0,0,0,0.12)'; } }}
+                                        onMouseLeave={(e) => { if(!isSelected) { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 4px 10px rgba(0,0,0,0.02)'; e.currentTarget.style.borderColor = 'rgba(0,0,0,0.06)'; } }}
+                                    >
                                     <div style={{ fontSize: '1.5rem', marginBottom: '5px' }}>{icon}</div>
                                     <div style={{ fontWeight: 700, fontSize: '0.85rem', color: isSelected ? 'var(--primary)' : 'var(--text-muted)' }}>{method.name}</div>
                                 </button>
@@ -240,11 +254,15 @@ Thank you!`.trim();
                                 key={type.id}
                                 onClick={() => setOrderType(type.id)}
                                 style={{
-                                    padding: '15px', borderRadius: '15px', border: '2px solid',
-                                    borderColor: orderType === type.id ? 'var(--primary)' : '#e2e8f0',
-                                    background: orderType === type.id ? '#fff1f2' : 'white',
-                                    cursor: 'pointer', textAlign: 'center', transition: 'all 0.2s'
+                                    padding: '16px', borderRadius: '16px', border: '1px solid',
+                                    borderColor: orderType === type.id ? 'var(--primary)' : 'rgba(0,0,0,0.06)',
+                                    background: orderType === type.id ? '#fff1f2' : '#ffffff',
+                                    cursor: 'pointer', textAlign: 'center', transition: 'all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)',
+                                    transform: orderType === type.id ? 'translateY(-2px)' : 'translateY(0)',
+                                    boxShadow: orderType === type.id ? '0 8px 20px rgba(255, 0, 144, 0.12)' : '0 4px 10px rgba(0,0,0,0.02)'
                                 }}
+                                onMouseEnter={(e) => { if(orderType !== type.id) { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 6px 15px rgba(0,0,0,0.05)'; e.currentTarget.style.borderColor = 'rgba(0,0,0,0.12)'; } }}
+                                onMouseLeave={(e) => { if(orderType !== type.id) { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 4px 10px rgba(0,0,0,0.02)'; e.currentTarget.style.borderColor = 'rgba(0,0,0,0.06)'; } }}
                             >
                                 <div style={{ fontSize: '1.5rem', marginBottom: '8px', color: orderType === type.id ? 'var(--primary)' : 'var(--text-muted)' }}>
                                     {type.id === 'dine-in' && <Utensils size={24} style={{ margin: '0 auto' }} />}
@@ -358,19 +376,32 @@ TOTAL AMOUNT: ₱${cartTotal}
                             navigator.clipboard.writeText(message);
                             alert('Order details manually copied!');
                         }}
-                        style={{ width: '100%', padding: '12px', borderRadius: '10px', background: '#e2e8f0', color: 'var(--primary)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontWeight: 600, transition: 'background 0.2s' }}
+                        style={{ width: '100%', padding: '14px', borderRadius: '12px', background: 'rgba(255,255,255,0.8)', color: 'var(--text-muted)', border: '1px solid rgba(0,0,0,0.08)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontWeight: 600, transition: 'all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)', boxShadow: '0 2px 8px rgba(0,0,0,0.02)' }}
+                        onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 6px 15px rgba(0,0,0,0.06)'; e.currentTarget.style.color = 'var(--primary)'; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.02)'; e.currentTarget.style.color = 'var(--text-muted)'; }}
                     >
                         <Copy size={16} /> Copy Order Details
                     </button>
                 </div>
 
-                <button
-                    className={`btn-accent ${isPlacingOrder ? 'btn-loading' : ''}`}
-                    onClick={handlePlaceOrder}
-                    style={{ width: '100%', padding: '20px', borderRadius: '15px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', fontWeight: 800, fontSize: '1.2rem', boxShadow: '0 10px 20px rgba(255, 180, 0, 0.2)' }}
-                >
-                    <MessageSquare size={24} /> {isPlacingOrder ? 'Sending Order...' : 'Confirm & Message Store'}
-                </button>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                    <button
+                        className={`btn-primary ${isPlacingOrder ? 'btn-loading' : ''}`}
+                        onClick={() => handlePlaceOrder('android')}
+                        disabled={isPlacingOrder}
+                        style={{ width: '100%', padding: '18px', borderRadius: '16px', fontSize: '1.1rem' }}
+                    >
+                        <MessageSquare size={20} /> {isPlacingOrder ? 'Processing...' : 'Send Order'}
+                    </button>
+                    <button
+                        className={`btn-secondary ${isPlacingOrder ? 'btn-loading' : ''}`}
+                        onClick={() => handlePlaceOrder('ios')}
+                        disabled={isPlacingOrder}
+                        style={{ width: '100%', padding: '18px', borderRadius: '16px', fontSize: '1rem' }}
+                    >
+                        <Copy size={20} /> {isPlacingOrder ? 'Processing...' : 'Send Order for iOS Users'}
+                    </button>
+                </div>
             </div>
         </div>
     );

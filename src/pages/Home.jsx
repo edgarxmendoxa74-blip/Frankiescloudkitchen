@@ -400,8 +400,8 @@ const Home = () => {
                 <div className="menu-grid">
                     {filteredItems.map(item => (
                         <div className="menu-item-card" key={item.id} style={{ opacity: item.out_of_stock ? 0.6 : 1 }}>
-                        <div className="menu-item-image-wrapper" style={{ position: 'relative', overflow: 'hidden', cursor: 'pointer' }} onClick={() => setPreviewImage(item.image)}>
-                                <img src={item.image} alt={item.name} className="menu-item-image" loading="lazy" />
+                            <div className="menu-item-image-wrapper" style={{ position: 'relative', overflow: 'hidden', cursor: 'pointer' }} onClick={() => setPreviewImage(item.image)}>
+                                <img src={item.image} alt={item.name} className="menu-item-image" />
                                 <div className="image-overlay" style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.2)', opacity: 0, transition: 'opacity 0.3s', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>
                                     <Eye size={32} />
                                 </div>
